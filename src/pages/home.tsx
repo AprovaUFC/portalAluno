@@ -33,7 +33,7 @@ export default function PortalDoAluno() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [approvalStatus, setApprovalStatus] =
-    useState<ApprovalStatus>("pending");
+    useState<ApprovalStatus>("approved");
   const [showApprovalStatus, setShowApprovalStatus] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(false);
 
@@ -49,7 +49,7 @@ export default function PortalDoAluno() {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Registro:", { name, email, username, password });
-    setApprovalStatus("pending");
+    setApprovalStatus("approved");
     setShowApprovalStatus(true);
   };
 
@@ -63,10 +63,7 @@ export default function PortalDoAluno() {
   };
 
   const checkApprovalStatus = () => {
-    const randomStatus: ApprovalStatus = ["pending", "approved", "rejected"][
-      Math.floor(Math.random() * 3)
-    ] as ApprovalStatus;
-    setApprovalStatus(randomStatus);
+    setApprovalStatus("approved");
     setShowApprovalStatus(true);
   };
 
@@ -291,15 +288,7 @@ export default function PortalDoAluno() {
               Notas
             </Button>
           </li>
-          <li>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
-            >
-              <Bell className="mr-2 h-4 w-4" />
-              Postagens
-            </Button>
-          </li>
+
           <li>
             <Button
               variant="ghost"
@@ -361,12 +350,6 @@ export default function PortalDoAluno() {
               className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
             >
               Notas
-            </TabsTrigger>
-            <TabsTrigger
-              value="postagens"
-              className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
-            >
-              Postagens
             </TabsTrigger>
           </TabsList>
           <TabsContent value="atividades">
