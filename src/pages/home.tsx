@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,331 +9,90 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import {
   BookOpen,
   GraduationCap,
   Bell,
-  Home,
-  LogOut,
-  User,
-  CheckCircle,
-  XCircle,
-  Menu,
 } from "lucide-react";
 
-type ApprovalStatus = "pending" | "approved" | "rejected";
+import NavBarComponent from "components/NavBar/NavBarComponent";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import Loading from "components/Loading/Loading";
 
-export default function PortalDoAluno() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [approvalStatus, setApprovalStatus] =
-    useState<ApprovalStatus>("approved");
-  const [showApprovalStatus, setShowApprovalStatus] = useState(false);
-  const [isNavOpen, setIsNavOpen] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (username && password && approvalStatus === "approved") {
-      setIsLoggedIn(true);
-    } else if (approvalStatus !== "approved") {
-      setShowApprovalStatus(true);
-    }
-  };
+export default function HomePage() {
+  
+  const [loading,setIsLoading] = useState(true);
+  const [userName, setUserName] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      // Primeiro, obtenha o usuário logado
+      try{
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Registro:", { name, email, username, password });
-    setApprovalStatus("approved");
-    setShowApprovalStatus(true);
-  };
+      if (userError) {
+        console.error('Erro ao obter usuário logado:', userError);
+        return;
+      }
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUsername("");
-    setPassword("");
-    setEmail("");
-    setName("");
-    setShowApprovalStatus(false);
-  };
+      if (user) {
+        const userEmail = user.email; // Obtenha o email do usuário autenticado
 
-  const checkApprovalStatus = () => {
-    setApprovalStatus("approved");
-    setShowApprovalStatus(true);
-  };
+        // Agora, faça a requisição para obter o nome baseado no email
+        const { data, error } = await supabase
+          .from('Aluno') // Supondo que a tabela se chama 'users'
+          .select('name') // Seleciona apenas o campo 'name'
+          .eq('email', userEmail); // Filtra pelo email do usuário logado
 
-  const toggleNav = () => {
-    setIsNavOpen(!isNavOpen);
-  };
+        if (error) {
+          console.error('Erro ao buscar o nome do usuário:', error);
+        } else if (data && data.length > 0) {
+          setUserName(data[0].name); // Supondo que 'name' é o campo que contém o nome
+        } else {
+          console.log('Usuário não encontrado.');
+        }
+      }
+      }catch(error){
+        console.error("Erro durante o fetch:", error);
+      }finally{
+        setIsLoading(false)
+      }
+    };
+    fetchData(); // Chamando a função assíncrona
+    
+  }, []);
 
-  if (showApprovalStatus) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-green-50">
-        <Card className="w-[400px]">
-          <CardHeader className="bg-green-600 text-white rounded-t-lg">
-            <CardTitle>Status de Aprovação</CardTitle>
-            <CardDescription className="text-green-100">
-              Verifique o status do seu processo seletivo
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              {approvalStatus === "pending" && (
-                <>
-                  <div className="text-yellow-500 flex items-center justify-center">
-                    <Bell className="h-12 w-12" />
-                  </div>
-                  <p className="text-lg font-semibold">
-                    Seu cadastro está em análise
-                  </p>
-                  <p>Aguarde a aprovação para acessar o portal</p>
-                </>
-              )}
-              {approvalStatus === "approved" && (
-                <>
-                  <div className="text-green-500 flex items-center justify-center">
-                    <CheckCircle className="h-12 w-12" />
-                  </div>
-                  <p className="text-lg font-semibold">
-                    Parabéns! Seu cadastro foi aprovado
-                  </p>
-                  <p>Você já pode fazer login no portal</p>
-                </>
-              )}
-              {approvalStatus === "rejected" && (
-                <>
-                  <div className="text-red-500 flex items-center justify-center">
-                    <XCircle className="h-12 w-12" />
-                  </div>
-                  <p className="text-lg font-semibold">
-                    Desculpe, seu cadastro não foi aprovado
-                  </p>
-                  <p>
-                    Entre em contato com a instituição para mais informações
-                  </p>
-                </>
-              )}
-              <Button
-                onClick={() => setShowApprovalStatus(false)}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                Voltar para Login
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
-  if (!isLoggedIn) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-green-50">
-        <Card className="w-[400px]">
-          <CardHeader className="bg-green-600 text-white rounded-t-lg">
-            <CardTitle>Portal do Aluno</CardTitle>
-            <CardDescription className="text-green-100">
-              Faça login ou cadastre-se para acessar o portal
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Cadastro</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Usuário</Label>
-                    <Input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700"
-                  >
-                    Entrar
-                  </Button>
-                </form>
-                <div className="mt-4 text-center">
-                  <Button
-                    variant="link"
-                    onClick={checkApprovalStatus}
-                    className="text-green-600"
-                  >
-                    Verificar Status de Aprovação
-                  </Button>
-                </div>
-              </TabsContent>
-              <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome Completo</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newUsername">Usuário</Label>
-                    <Input
-                      id="newUsername"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">Senha</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700"
-                  >
-                    Cadastrar
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
+
+
+  
   return (
     <div className="flex h-screen bg-green-50">
+      {loading &&(
+        <div>
+          <Loading/>
+        </div>
+      )}
       {/* Navbar Lateral */}
-      <nav
-        className={`w-64 bg-white shadow-md fixed inset-y-0 left-0 transform ${
-          isNavOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 transition-transform duration-200 ease-in-out lg:relative z-40`}
-      >
-        <div className="p-4 bg-green-600">
-          <h2 className="text-2xl font-bold text-white">Portal do Aluno</h2>
-        </div>
-        <ul className="space-y-2 p-4">
-          <li>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
-            >
-              <Home className="mr-2 h-4 w-4" />
-              Início
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
-            >
-              <BookOpen className="mr-2 h-4 w-4" />
-              Atividades
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
-            >
-              <GraduationCap className="mr-2 h-4 w-4" />
-              Notas
-            </Button>
-          </li>
-
-          <li>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
-            >
-              <User className="mr-2 h-4 w-4" />
-              Perfil
-            </Button>
-          </li>
-        </ul>
-        <div className="p-4 mt-auto">
-          <Button
-            variant="outline"
-            className="w-full border-green-600 text-green-600 hover:bg-green-50"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
-        </div>
-      </nav>
+      
+      <NavBarComponent/>
 
       {/* Overlay para fechar o menu em telas móveis */}
-      {isNavOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setIsNavOpen(false)}
-        ></div>
-      )}
+
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 p-8 bg-transparent overflow-auto lg:ml-64">
+      <main className="flex-1 p-8 bg-transparent overflow-auto mt-10 mr-8 ml-24">
+      
         <h1 className="text-3xl font-bold mb-6 text-green-800">
-          Bem-vindo, {name || username}!
+           Bem-vindo, {userName}! 
           {/* Botão de Toggle para Navbar em Mobile */}
-          <Button
-            variant="outline"
-            size="icon"
-            className={`fixed top-0.5 text-black bg-green-800 left-0.5 rounded-full z-50 lg:hidden ${
-              isNavOpen ? "hidden" : ""
-            }`}
-            onClick={toggleNav}
-          >
-            <Menu className="h-6 w-6" />
-            <span className="sr-only ">Toggle navigation menu</span>
-          </Button>
         </h1>
 
         <Tabs defaultValue="atividades" className="space-y-4">
