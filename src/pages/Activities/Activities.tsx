@@ -83,9 +83,9 @@ export default function Activities() {
             }
           }}
         >
-          {atividades.map((atividade) => (
+          {atividades.map((atividade,index) => (
             <MotionCard 
-              key={atividade.id} 
+              key={index} 
               className="flex flex-col"
               variants={{
                 hidden: { opacity: 0, y: 20 },

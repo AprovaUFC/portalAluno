@@ -46,7 +46,7 @@ export default function HomePage() {
 
         // Agora, faça a requisição para obter o nome baseado no email
         const { data, error } = await supabase
-          .from('Aluno') // Supondo que a tabela se chama 'users'
+          .from('Aluno') // Seleciona tabela de nome Aluno 
           .select('name') // Seleciona apenas o campo 'name'
           .eq('email', userEmail); // Filtra pelo email do usuário logado
 

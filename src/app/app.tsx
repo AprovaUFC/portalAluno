@@ -5,6 +5,7 @@ import HomePage from '@/pages/home';
 import PrivateRoute from 'components/PrivateRoute/PrivateRoute';
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import PerfilAluno from '@/pages/Perfil/perfil';
 
 
 const App: React.FC = () => {
@@ -12,13 +13,13 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/" element={<AuthComponent />} />
-        
         <Route path='/home' element={
           <PrivateRoute>
             <HomePage />
           </PrivateRoute>
           }></Route>
         <Route path='/home/activites' element={<Activities/>}></Route>
+        <Route path='/home/perfil' element={<PerfilAluno/>}></Route>
         {/* Adicione mais rotas conforme necessário */}
       </Routes>
     </Router>

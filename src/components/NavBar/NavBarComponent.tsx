@@ -72,6 +72,7 @@ const NavBarComponent = () => {
       </li>
 
       <li>
+        <Link to={'/home/perfil'}>
         <Button
           variant="ghost"
           className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
@@ -79,6 +80,7 @@ const NavBarComponent = () => {
           <User className="mr-2 h-4 w-4" />
           Perfil
         </Button>
+        </Link>
       </li>
     </ul>
     <div className="p-4 mt-auto">
