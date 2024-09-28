@@ -117,9 +117,7 @@ export default function PerfilAluno() {
         return;
       }
   
-      // Obtém o UID do usuário da sessão
       const user = sessionData.session.user;
-  
       if (!user || !user.id) {
         console.error('Erro ao obter o usuário autenticado ou o UID está indefinido');
         return;
@@ -131,8 +129,8 @@ export default function PerfilAluno() {
         const blob = await response.blob();
         const fileExt = blob.type.split('/')[1];
   
-        // Use o UID ao invés do email no nome da pasta e arquivo
-        const fileName = `${user.id}/profile.${fileExt}`;
+        // Nome do arquivo único baseado no UID do usuário e timestamp
+        const fileName = `${user.id}/profile_${new Date().getTime()}.${fileExt}`;
   
         // Faz o upload da imagem para o Supabase Storage no bucket "avatars"
         const { data, error } = await supabase.storage
@@ -141,20 +139,20 @@ export default function PerfilAluno() {
             upsert: true,
             contentType: blob.type,
           });
-          if (data) {
-            console.log("Data:", data);
+          if(data){
+            console.log(`Data${data}`)
           }
-  
-        if (error) {
+        else if (error) {
           console.error("Erro ao fazer upload da imagem:", error);
           return;
         }
   
         // Pega a URL pública da imagem no bucket "avatars"
         const { data: publicUrl } = supabase.storage.from('avatars').getPublicUrl(fileName);
-        fotoPerfilUrl = publicUrl.publicUrl;
+        fotoPerfilUrl = `${publicUrl.publicUrl}?t=${new Date().getTime()}`; // Adiciona cache-busting
+        setNovaInfo({ ...novaInfo, fotoPerfil: fotoPerfilUrl });
       }
-  
+
       // Atualiza os dados do aluno no banco de dados
       const { error } = await supabase
         .from('Aluno')
@@ -179,6 +177,7 @@ export default function PerfilAluno() {
   
   
   
+  
   const handleCancel = () => {
     setEditando(false)
     setNovaInfo(alunoInfo)
@@ -197,10 +196,10 @@ export default function PerfilAluno() {
     }
   }
 
-  const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
-    console.log(croppedArea)
   }, []);
+  
   
 
 
@@ -240,7 +239,8 @@ export default function PerfilAluno() {
         size,
         size
       );
-    
+      // console.log("URL da imagem antes do recorte:", imageSrc);
+
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
           if (!blob) {
@@ -253,14 +253,30 @@ export default function PerfilAluno() {
     };
     
 
-  const handleCropSave = async () => {
-    if (imagemTemp && croppedAreaPixels) {
-      const croppedImage = await getCroppedImg(imagemTemp, croppedAreaPixels)
-      setNovaInfo({ ...novaInfo, fotoPerfil: croppedImage as string })
-      setShowCropDialog(false)
-      setImagemTemp(null)
-    }
-  }
+    const handleCropSave = async () => {
+      if (imagemTemp && croppedAreaPixels) {
+        const croppedImage = await getCroppedImg(imagemTemp, croppedAreaPixels);
+    
+        if (croppedImage) {
+          setNovaInfo({ ...novaInfo, fotoPerfil: croppedImage });
+        }
+    
+        // Revogue a URL temporária **apenas** após o corte ser salvo ou cancelado
+        if (imagemTemp) {
+          URL.revokeObjectURL(imagemTemp);
+        }
+    
+        setShowCropDialog(false);
+        setImagemTemp(null); // Reseta o estado da imagem temporária
+      }
+    };
+    
+    
+  // if (imagemTemp) {
+  //   URL.revokeObjectURL(imagemTemp); // Libera a URL Blob da memória
+  //   setImagemTemp(null); // Limpa o estado da imagem temporária
+  // }
+  
 
   return (
     <div className="flex min-h-screen">
@@ -310,7 +326,7 @@ export default function PerfilAluno() {
                     whileTap={{ scale: 0.95 }}
                   >
                     <Avatar className="w-40 h-40 border-4 border-green-500 shadow-lg">
-                      <AvatarImage src={`${editando ? novaInfo.fotoPerfil : alunoInfo.fotoPerfil}?t=${new Date().getTime()}`} alt="Foto de perfil" />
+                    <AvatarImage src={editando ? novaInfo.fotoPerfil : alunoInfo.fotoPerfil} alt="Foto de perfil" />
                       <AvatarFallback className="bg-green-200 text-green-600">
                         <User className="w-20 h-20" />
                       </AvatarFallback>
