@@ -310,7 +310,7 @@ export default function PerfilAluno() {
                     whileTap={{ scale: 0.95 }}
                   >
                     <Avatar className="w-40 h-40 border-4 border-green-500 shadow-lg">
-                      <AvatarImage src={editando ? novaInfo.fotoPerfil : alunoInfo.fotoPerfil} alt="Foto de perfil" />
+                      <AvatarImage src={`${editando ? novaInfo.fotoPerfil : alunoInfo.fotoPerfil}?t=${new Date().getTime()}`} alt="Foto de perfil" />
                       <AvatarFallback className="bg-green-200 text-green-600">
                         <User className="w-20 h-20" />
                       </AvatarFallback>
