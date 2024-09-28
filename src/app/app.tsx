@@ -1,7 +1,6 @@
-// App.tsx
 import AuthComponent from 'components/AuthComponent/AuthComponent';
 import Activities from '@/pages/Activities/Activities';
-import HomePage from '@/pages/home';
+import HomePage from '@/pages/Home/home.tsx';
 import PrivateRoute from 'components/PrivateRoute/PrivateRoute';
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -18,9 +17,9 @@ const App: React.FC = () => {
             <HomePage />
           </PrivateRoute>
           }></Route>
-        <Route path='/home/activites' element={<Activities/>}></Route>
-        <Route path='/home/perfil' element={<PerfilAluno/>}></Route>
-        {/* Adicione mais rotas conforme necessário */}
+        <Route path='/activites' element={<Activities/>}></Route>
+        <Route path='/perfil' element={<PerfilAluno/>}></Route>
+        
       </Routes>
     </Router>
   );

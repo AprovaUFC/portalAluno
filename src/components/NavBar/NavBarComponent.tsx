@@ -50,7 +50,7 @@ const NavBarComponent = () => {
         </Link>
       </li>
       <li>
-      <Link to={'/Home/activites'}>
+      <Link to={'/activites'}>
         <Button
           variant="ghost"
           className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
@@ -72,7 +72,7 @@ const NavBarComponent = () => {
       </li>
 
       <li>
-        <Link to={'/home/perfil'}>
+        <Link to={'/perfil'}>
         <Button
           variant="ghost"
           className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"

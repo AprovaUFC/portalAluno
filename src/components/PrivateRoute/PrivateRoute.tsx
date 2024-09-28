@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase'; // Importe sua instância do Supabase
-import HomePage from '@/pages/home';
+import HomePage from '@/pages/Home/home';
 import Loading from 'components/Loading/Loading';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = () => {
