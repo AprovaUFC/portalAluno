@@ -36,6 +36,7 @@ const stagger = {
 }
 
 export default function PerfilAluno() {
+  const [isImageLoading, setIsImageLoading] = useState(true)
   const [editando, setEditando] = useState(false)
   const [imagemTemp, setImagemTemp] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
@@ -51,6 +52,7 @@ export default function PerfilAluno() {
   const [novaInfo, setNovaInfo] = useState<AlunoInfo>(alunoInfo)
 
   useEffect(() => {
+    setIsLoading(true)
     const fetchData = async () => {
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -93,6 +95,7 @@ export default function PerfilAluno() {
         console.error("Erro durante o fetch:", error);
       } finally {
         setIsLoading(false);
+        setIsImageLoading(false)
       }
     };
     
@@ -106,6 +109,7 @@ export default function PerfilAluno() {
   }
 
   const handleSave = async () => {
+    setIsImageLoading(true)
     try {
       let fotoPerfilUrl = alunoInfo.fotoPerfil;
   
@@ -171,6 +175,8 @@ export default function PerfilAluno() {
       }
     } catch (error) {
       console.error('Erro ao salvar as alterações:', error);
+    }finally{
+      setIsImageLoading(false)
     }
   };
   
@@ -272,17 +278,11 @@ export default function PerfilAluno() {
     };
     
     
-  // if (imagemTemp) {
-  //   URL.revokeObjectURL(imagemTemp); // Libera a URL Blob da memória
-  //   setImagemTemp(null); // Limpa o estado da imagem temporária
-  // }
-  
+
 
   return (
     <div className="flex min-h-screen">
-        {isLoading && (
-            <Loading/>
-        )}
+
     <NavBarComponent/>
     <AnimatePresence>
       <motion.div 
@@ -304,7 +304,11 @@ export default function PerfilAluno() {
           >
             Perfil do Aluno
           </motion.h1>
+          {isLoading && (
+            <Loading/>
+        )}
           <motion.div variants={fadeInUp}>
+            
             <Card className="w-full shadow-lg overflow-hidden">
               <motion.div
                 initial={{ backgroundColor: "#22c55e" }}
@@ -326,6 +330,12 @@ export default function PerfilAluno() {
                     whileTap={{ scale: 0.95 }}
                   >
                     <Avatar className="w-40 h-40 border-4 border-green-500 shadow-lg">
+                              {/* Loader */}
+                              {isImageLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-24 h-24 border-4 border-t-green-500 border-green-800 rounded-full animate-spin"></div>
+                                </div>
+                              )}
                     <AvatarImage src={editando ? novaInfo.fotoPerfil : alunoInfo.fotoPerfil} alt="Foto de perfil" />
                       <AvatarFallback className="bg-green-200 text-green-600">
                         <User className="w-20 h-20" />
