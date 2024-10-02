@@ -3,65 +3,124 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { BookOpen, Clock, Calendar, Upload } from "lucide-react"
 import NavBarComponent from "components/NavBar/NavBarComponent"
+import { supabase } from "@/lib/supabase"
+import Loading from "components/Loading/Loading"
 
 type Atividade = {
   id: number
   titulo: string
-  disciplina: string
   descricao: string
   dataEntrega: string
-  status: "pendente" | "entregue" | "avaliado"
+  status: "PENDENTE" | "ENTREGUE" | "AVALIADO"
+  dataLimite: string
 }
 
-const atividadesIniciais: Atividade[] = [
-  { id: 1, titulo: "Resolução de Equações", disciplina: "Matemática", descricao: "Resolver as equações da página 42 do livro.", dataEntrega: "2023-06-30", status: "pendente" },
-  { id: 2, titulo: "Redação sobre Meio Ambiente", disciplina: "Português", descricao: "Escrever uma redação de 30 linhas sobre a importância da preservação ambiental.", dataEntrega: "2023-07-05", status: "pendente" },
-  { id: 3, titulo: "Experimento de Fotossíntese", disciplina: "Biologia", descricao: "Realizar o experimento de fotossíntese conforme as instruções fornecidas e elaborar um relatório.", dataEntrega: "2023-07-10", status: "pendente" },
-]
 
 const MotionCard = motion(Card)
 
 export default function Activities() {
-  const [atividades, setAtividades] = useState<Atividade[]>(atividadesIniciais)
+  const [atividades, setAtividades] = useState<Atividade[]>([])
   const [atividadeSelecionada, setAtividadeSelecionada] = useState<Atividade | null>(null)
-  const [resposta, setResposta] = useState("")
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [IsLoading,setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Gerencia o overflow da página baseado no estado do diálogo
     if (isDialogOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
     }
+
+    // Função para buscar as atividades do Supabase
+    const fetchAtividades = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('Atividade')
+          .select('*')
+
+        if (error) {
+          console.error('Erro ao buscar atividades:', error)
+        } else {
+          setAtividades(data ) // Armazena as atividades no estado
+        }
+      } catch (err) {
+        console.error('Erro inesperado:', err)
+      }finally{
+        setIsLoading(false)
+      }
+    }
+
+    // Chama a função para buscar as atividades
+    fetchAtividades()
+
+    // Cleanup para quando o componente for desmontado
     return () => {
       document.body.style.overflow = 'unset'
     }
   }, [isDialogOpen])
 
-  const handleEnviarResposta = () => {
-    if (atividadeSelecionada) {
-      setAtividades(atividades.map(atividade => 
-        atividade.id === atividadeSelecionada.id 
-          ? { ...atividade, status: "entregue" as const } 
-          : atividade
-      ))
-      setAtividadeSelecionada(null)
-      setResposta("")
-      setArquivo(null)
-      setIsDialogOpen(false)
+  const handleEnviarResposta = async () => {
+    if (!arquivo || !atividadeSelecionada) {
+      console.error('Nenhum arquivo ou atividade selecionada.')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Gerar nome único para o arquivo
+      const fileExt = arquivo.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `arquivos/${fileName}`
+      console.log(filePath)
+      // Upload do arquivo para o bucket no Supabase
+      const { error: uploadError } = await supabase.storage
+        .from('respostas_atividades') // Certifique-se de que este seja o nome do bucket
+        .upload(filePath, arquivo)
+
+      if (uploadError) {
+        console.error('Erro ao enviar arquivo:', uploadError.message)
+        return
+      }
+
+      // Obter URL público do arquivo enviado
+      const { data: publicURL } = supabase.storage.from('respostas_atividades').getPublicUrl(filePath)
+      if (!publicURL) {
+        console.error('Erro ao obter URL do arquivo.')
+        return
+      }
+
+      // Inserir atividade na tabela com o URL do arquivo
+      const { data: atividadeData, error: atividadeError } = await supabase
+        .from('Atividade') // Certifique-se de que o nome da tabela está correto
+        .update({ arquivo: publicURL }) // Atualiza a atividade selecionada com o URL do arquivo
+        .eq('id', atividadeSelecionada.id) // Define qual atividade está sendo atualizada
+
+      if (atividadeError) {
+        console.error('Erro ao atualizar a atividade:', atividadeError.message)
+        return
+      }
+
+      console.log('Atividade atualizada com sucesso:', atividadeData)
+      setIsDialogOpen(false) // Fecha o diálogo após o sucesso
+    } catch (err) {
+      console.error('Erro inesperado:', err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
     <div className="flex bg-green-50">
       <NavBarComponent />
+
       <div className="container mx-auto p-4 relative">
         <motion.h1 
           className="text-3xl font-bold mb-6 text-green-800"
@@ -99,13 +158,13 @@ export default function Activities() {
                   <BookOpen className="mr-2" />
                   {atividade.titulo}
                 </CardTitle>
-                <CardDescription className="text-green-100">{atividade.disciplina}</CardDescription>
+                
               </CardHeader>
               <CardContent className="flex-grow">
                 <p className="mb-2">{atividade.descricao}</p>
                 <div className="flex items-center text-sm text-gray-600 mb-2">
                   <Clock className="mr-1" size={16} />
-                  <span>Entrega: {atividade.dataEntrega}</span>
+                  <span>Entrega: {atividade.dataLimite}</span>
                 </div>
                 <div className="flex items-center text-sm">
                   <Calendar className="mr-1" size={16} />
@@ -150,28 +209,23 @@ export default function Activities() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-6">
+                {IsLoading && (
+                  <Loading/>
+                )}
                   <h2 className="text-2xl font-bold mb-4">{atividadeSelecionada?.titulo}</h2>
-                  <p className="text-gray-600 mb-4">{atividadeSelecionada?.disciplina}</p>
+                  <p className="text-gray-600 mb-4">{atividadeSelecionada?.descricao}</p>
                   <div className="grid gap-4 py-4">
-                    <p>{atividadeSelecionada?.descricao}</p>
+                    
                     <div className="flex items-center text-sm text-gray-600">
                       <Clock className="mr-1" size={16} />
-                      <span>Entrega: {atividadeSelecionada?.dataEntrega}</span>
+                      <span>Entrega: {atividadeSelecionada?.dataLimite}</span>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="resposta">Sua Resposta</Label>
-                      <Textarea
-                        id="resposta"
-                        value={resposta}
-                        onChange={(e) => setResposta(e.target.value)}
-                        placeholder="Digite sua resposta aqui..."
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="arquivo">Anexar Arquivo (opcional)</Label>
+                      <Label htmlFor="arquivo">Anexar Arquivo </Label>
                       <Input
                         id="arquivo"
                         type="file"
+                        accept="image/*,application/pdf"
                         onChange={(e) => setArquivo(e.target.files ? e.target.files[0] : null)}
                       />
                       {arquivo && (

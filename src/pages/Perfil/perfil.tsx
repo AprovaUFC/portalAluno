@@ -329,11 +329,11 @@ export default function PerfilAluno() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Avatar className="w-40 h-40 border-4 border-green-500 shadow-lg">
+                    <Avatar className="w-36 h-36 border-4 border-green-500 shadow-lg">
                               {/* Loader */}
                               {isImageLoading && (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-24 h-24 border-4 border-t-green-500 border-green-800 rounded-full animate-spin"></div>
+                                  <div className="w-40 h-40 border-4 border-t-green-500 border-green-800 rounded-full animate-spin"></div>
                                 </div>
                               )}
                     <AvatarImage src={editando ? novaInfo.fotoPerfil : alunoInfo.fotoPerfil} alt="Foto de perfil" />
