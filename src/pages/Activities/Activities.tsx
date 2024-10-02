@@ -118,10 +118,10 @@ export default function Activities() {
   }
 
   return (
-    <div className="flex bg-green-50">
+    <div className="flex h-screen bg-green-50">
       <NavBarComponent />
 
-      <div className="container mx-auto p-4 relative">
+      <div className="container mx-auto p-4 relative max-xl:pl-14">
         <motion.h1 
           className="text-3xl font-bold mb-6 text-green-800"
           initial={{ opacity: 0, y: -20 }}

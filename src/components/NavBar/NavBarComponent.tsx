@@ -38,7 +38,7 @@ const NavBarComponent = () => {
     </div>
     <ul className="space-y-2 p-4">
       <li>
-      <Link to={'/Home'}>
+      <Link to={'/home'}>
         <Button
           variant="ghost"
           className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
@@ -96,14 +96,14 @@ const NavBarComponent = () => {
   </nav>
     {isNavOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className=" fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={() => setIsNavOpen(false)}
         ></div>
       )}
-                <Button
+          <Button
             variant="outline"
             size="icon"
-            className={`fixed top-0.5 text-black bg-green-800 left-0.5 rounded-full z-50 lg:hidden ${
+            className={` fixed top-2 text-black bg-green-600 left-1 rounded-sm z-50 lg:hidden ${
               isNavOpen ? "hidden" : ""
             }`}
             onClick={toggleNav}

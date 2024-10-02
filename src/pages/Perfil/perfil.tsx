@@ -286,7 +286,7 @@ export default function PerfilAluno() {
     <NavBarComponent/>
     <AnimatePresence>
       <motion.div 
-        className="flex-1 min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8"
+        className="flex-1 h-screen bg-green-50 py-12 px-4 sm:px-6 lg:px-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
