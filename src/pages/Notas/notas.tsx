@@ -21,7 +21,6 @@ export default function PaginaNotas() {
   const [busca, setBusca] = useState("");
   const [alunoId, setAlunoId] = useState<number | null>(null); // Aluno logado
   const [isLoading, setIsLoading] = useState(true);
-
   // Função para buscar o aluno logado
   const fetchAlunoLogado = async () => {
     const { data: sessionData, error } = await supabase.auth.getSession();
@@ -55,42 +54,48 @@ export default function PaginaNotas() {
   };
 
   // Função para buscar as notas do Supabase
-  const fetchNotas = async () => {
-    setIsLoading(true); // Ativando o loading no início da busca
 
-    if (!alunoId) return;
-
-    const { data, error } = await supabase
-      .from('Nota')
-      .select(`
-        id, 
-        nota, 
-        dataEntrega, 
-        atividade_id (titulo)
-      `); // Buscando a atividade e o título relacionado
-
-    if (error) {
-      console.error("Erro ao buscar as notas: ", error);
-    } else {
-      // Mapeia os dados da API para o formato que será usado no componente
-      const notasMapeadas = data?.map((nota: any) => ({
-        id: nota.id,
-        materia: nota.atividade_id.titulo, // Pegando o título da atividade
-        nota: nota.nota,
-        dataLimite: nota.dataEntrega,
-      }));
-      setNotas(notasMapeadas || []);
-      setNotasFiltered(notasMapeadas || []); // Inicializando o filtro com todas as notas
-    }
-    
-    setIsLoading(false); // Desativando o loading após carregar as notas
-  };
 
   useEffect(() => {
     fetchAlunoLogado(); // Busca o aluno logado ao carregar o componente
   }, []);
 
   useEffect(() => {
+    const fetchNotas = async () => {
+      setIsLoading(true); // Ativando o loading no início da busca
+  
+      if (!alunoId) return;
+  
+      const { data, error } = await supabase
+        .from('Nota')
+        .select(`
+          id, 
+          nota, 
+          dataEntrega, 
+          Atividade: atividade_id (titulo)
+        `); // Buscando a atividade e o título relacionado
+
+          console.log(data)
+      if (error) {
+        console.error("Erro ao buscar as notas: ", error);
+      } else {
+        // Mapeia os dados da API para o formato que será usado no componente
+        const notasMapeadas: Nota[] = (data).map((nota:any) => ({
+          id: nota.id,
+          materia: nota.Atividade.titulo, // Acessa o primeiro item do array
+          nota: nota.nota,
+          dataLimite: nota.dataEntrega,
+        }));
+        
+        
+        setNotas(notasMapeadas || []);
+        setNotasFiltered(notasMapeadas || []); // Inicializando o filtro com todas as notas
+      }
+      
+      setIsLoading(false); // Desativando o loading após carregar as notas
+    };
+
+    
     if (alunoId) {
       fetchNotas(); // Busca as notas após obter o aluno logado
     }
