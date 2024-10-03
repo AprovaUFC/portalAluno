@@ -100,7 +100,10 @@ export default function Activities() {
       // Inserir atividade na tabela com o URL do arquivo
       const { data: atividadeData, error: atividadeError } = await supabase
         .from('Atividade') // Certifique-se de que o nome da tabela está correto
-        .update({ arquivo: publicURL }) // Atualiza a atividade selecionada com o URL do arquivo
+        .update({ 
+          arquivo: publicURL,
+          status: 'ENTREGUE'
+        }) // Atualiza a atividade selecionada com o URL do arquivo
         .eq('id', atividadeSelecionada.id) // Define qual atividade está sendo atualizada
 
       if (atividadeError) {
@@ -114,6 +117,7 @@ export default function Activities() {
       console.error('Erro inesperado:', err)
     } finally {
       setIsLoading(false)
+      
     }
   }
 
