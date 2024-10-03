@@ -15,17 +15,6 @@ type Nota = {
   dataLimite: string;
 };
 
-interface Atividade {
-    titulo: string;
-  }
-  
-  interface NotaSupabase {
-    id: number;
-    nota: number;
-    dataEntrega: string;
-    atividade_id: Atividade[]; // Array de atividades
-  }
-
 export default function PaginaNotas() {
   const [notas, setNotas] = useState<Nota[]>([]);
   const [notasFiltered, setNotasFiltered] = useState<Nota[]>([]);
@@ -84,7 +73,7 @@ export default function PaginaNotas() {
       console.error("Erro ao buscar as notas: ", error);
     } else {
       // Mapeia os dados da API para o formato que será usado no componente
-      const notasMapeadas = data?.map((nota: NotaSupabase) => ({
+      const notasMapeadas = data?.map((nota: any) => ({
         id: nota.id,
         materia: nota.atividade_id.titulo, // Pegando o título da atividade
         nota: nota.nota,
@@ -105,7 +94,7 @@ export default function PaginaNotas() {
     if (alunoId) {
       fetchNotas(); // Busca as notas após obter o aluno logado
     }
-  }, [alunoId,fetchNotas]);
+  }, [alunoId]);
 
   // Atualiza a lista filtrada com base no campo de busca
   useEffect(() => {
