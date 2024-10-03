@@ -32,7 +32,7 @@ export default function PaginaNotas() {
 
     const user = sessionData.session.user;
     const userEmail = user?.email;
-
+    
     if (!userEmail) {
       console.error("Email do usuário não encontrado.");
       return;
@@ -72,10 +72,11 @@ export default function PaginaNotas() {
           id, 
           nota, 
           dataEntrega, 
+          aluno_id,
           Atividade: atividade_id (titulo)
-        `); // Buscando a atividade e o título relacionado
+        `).eq('aluno_id',alunoId); // Buscando a atividade e o título relacionado
 
-          
+          console.log(data)
       if (error) {
         console.error("Erro ao buscar as notas: ", error);
       } else {
@@ -85,9 +86,10 @@ export default function PaginaNotas() {
           materia: nota.Atividade.titulo, // Acessa o primeiro item do array
           nota: nota.nota,
           dataLimite: nota.dataEntrega,
+          aluno_id: nota.aluno_id
         }));
         
-        
+        console.log(notasMapeadas)
         setNotas(notasMapeadas || []);
         setNotasFiltered(notasMapeadas || []); // Inicializando o filtro com todas as notas
       }
