@@ -18,9 +18,21 @@ const App: React.FC = () => {
             <HomePage />
           </PrivateRoute>
           }></Route>
-        <Route path='/activites' element={<Activities/>}></Route>
-        <Route path='/perfil' element={<PerfilAluno/>}></Route>
-        <Route path='/nota' element={<PaginaNotas/>}></Route>
+        <Route path='/activites' element={
+          <PrivateRoute>
+            <Activities/>
+          </PrivateRoute>
+          }></Route>
+        <Route path='/perfil' element={
+          <PrivateRoute>
+            <PerfilAluno/>
+          </PrivateRoute>
+          }></Route>
+        <Route path='/nota' element={
+          <PrivateRoute>
+            <PaginaNotas/>
+          </PrivateRoute>
+          }></Route>
       </Routes>
     </Router>
   );
