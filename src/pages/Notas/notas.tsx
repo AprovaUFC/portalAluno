@@ -75,7 +75,7 @@ export default function PaginaNotas() {
           Atividade: atividade_id (titulo)
         `); // Buscando a atividade e o título relacionado
 
-          console.log(data)
+          
       if (error) {
         console.error("Erro ao buscar as notas: ", error);
       } else {
