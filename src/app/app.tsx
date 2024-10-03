@@ -5,6 +5,7 @@ import PrivateRoute from 'components/PrivateRoute/PrivateRoute';
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PerfilAluno from '@/pages/Perfil/perfil';
+import PaginaNotas from '@/pages/Notas/notas';
 
 
 const App: React.FC = () => {
@@ -19,7 +20,7 @@ const App: React.FC = () => {
           }></Route>
         <Route path='/activites' element={<Activities/>}></Route>
         <Route path='/perfil' element={<PerfilAluno/>}></Route>
-        
+        <Route path='/nota' element={<PaginaNotas/>}></Route>
       </Routes>
     </Router>
   );

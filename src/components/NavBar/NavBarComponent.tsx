@@ -62,13 +62,15 @@ const NavBarComponent = () => {
         </Link>
       </li>
       <li>
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
-        >
-          <GraduationCap className="mr-2 h-4 w-4" />
-          Notas
-        </Button>
+        <Link to={'/nota'}>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
+            >
+              <GraduationCap className="mr-2 h-4 w-4" />
+              Notas
+            </Button>
+        </Link>
       </li>
 
       <li>
