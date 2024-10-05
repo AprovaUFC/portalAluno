@@ -48,7 +48,16 @@ export default function Activities() {
         if (error) {
           console.error('Erro ao buscar atividades:', error)
         } else {
-          setAtividades(data ) // Armazena as atividades no estado
+          const atividadesFiltradas = data.filter((atividade: Atividade) => {
+            // Converter dataLimite de varchar para Date
+            const [dia, mes, ano] = atividade.dataLimite.split('/')
+            const dataLimite = new Date(`${ano}-${mes}-${dia}`) // Formato yyyy-mm-dd
+            const dataAtual = new Date()
+
+            // Retornar atividades cujo dataLimite ainda não tenha passado
+            return dataAtual <= dataLimite
+          })
+          setAtividades(atividadesFiltradas ) // Armazena as atividades no estado
         }
       } catch (err) {
         console.error('Erro inesperado:', err)
@@ -68,7 +77,7 @@ export default function Activities() {
 
   const handleEnviarResposta = async () => {
     if (!arquivo || !atividadeSelecionada) {
-      console.error('Nenhum arquivo ou atividade selecionada.')
+      alert('Nenhum arquivo ou atividade selecionada.')
       return
     }
 
@@ -146,7 +155,8 @@ export default function Activities() {
             }
           }}
         >
-          {atividades.map((atividade,index) => (
+          {atividades.filter(atividade => atividade.status !== `AVALIADO`).map((atividade,index) => (
+
             <MotionCard 
               key={index} 
               className="flex flex-col"
