@@ -33,8 +33,11 @@ const NavBarComponent = () => {
       isNavOpen ? "translate-x-0" : "-translate-x-full"
     } lg:translate-x-0 transition-transform duration-200 ease-in-out lg:relative z-40`}
     >
-    <div className="p-4 bg-green-600">
-      <h2 className="text-2xl font-bold text-white">Portal do Aluno</h2>
+    <div className="p-4 flex bg-green-600">
+      <img src="/logo.png" alt="Logo" className="w-16 h-16 rounded-3xl mr-2 bg-transparent border-transparent  mb-2" />
+
+      <h2 className="text-2xl font-bold text-white">Aprova UFC Alunos</h2>
+      
     </div>
     <ul className="space-y-2 p-4">
       <li>

@@ -60,7 +60,7 @@ export default function HomePage() {
   return (
     <div className="flex h-screen bg-green-50 overflow-y-hidden">
       
-      <div className="w-64">
+      <div className="max-sm:w-3">
         <NavBarComponent />
       </div>
       <div className="flex-grow bg-green-50 overflow-auto">
@@ -69,7 +69,7 @@ export default function HomePage() {
         </header> */}
         {isLoading && (<Loading/>)}
         <ScrollArea className="h-full">
-          <div className="bg-green-50 p-4">
+          <div className="bg-green-50 pl-10 max-sm:pr-5 pt-8">
             <AnimatePresence>
               {avisos.map((aviso: any) => (
                 <motion.div
@@ -82,7 +82,7 @@ export default function HomePage() {
                   layout
                   className="mb-6"
                 >
-                  <Card className="shadow-lg overflow-hidden">
+                  <Card className="shadow-lg overflow-hidden max-w-6xl">
                     <CardHeader className="bg-gradient-to-r from-green-600 to-green-500">
                       <div className="flex items-center space-x-4">
                         <Avatar>
