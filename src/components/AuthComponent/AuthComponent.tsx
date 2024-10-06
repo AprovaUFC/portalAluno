@@ -39,7 +39,7 @@ const AuthComponent = () => {
     
             // Login bem-sucedido
             console.log('Login bem-sucedido', user);
-            navigate('/home'); // Redireciona para a página principal
+            navigate('/avisos'); // Redireciona para a página principal
         } catch (err) {
             console.error('Erro ao fazer login:', err);
             setLoginError('Erro ao fazer login. Tente novamente.'); // Em caso de erro inesperado
