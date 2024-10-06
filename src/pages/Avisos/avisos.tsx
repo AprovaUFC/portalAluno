@@ -39,13 +39,12 @@ export default function Avisos() {
         const { data, error } = await supabase
           .from('Avisos')
           .select(`id, professor_id (nome,perfil), descricao, imagem, arquivos, created_at`)
+          .order('created_at', { ascending: false }) // Ordena pela data de criação em ordem decrescente
   
         if (error) {
           console.log('Erro', error)
         } else {
-          
           setAvisos(data)
-          
         }
       } catch (err) {
         console.log(err)
@@ -55,6 +54,7 @@ export default function Avisos() {
     }
     fetchAvisos()
   }, [])
+  
   
 
   return (
