@@ -43,7 +43,7 @@ export default function Avisos() {
         if (error) {
           console.log('Erro', error)
         } else {
-          console.log('Avisos retornados:', data) // Verifique o que está sendo retornado aqui
+          
           setAvisos(data)
           
         }
