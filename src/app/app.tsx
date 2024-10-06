@@ -6,7 +6,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PerfilAluno from '@/pages/Perfil/perfil';
 import PaginaNotas from '@/pages/Notas/notas';
-import HomePage from '@/pages/Home/home';
+import Avisos from '@/pages/Avisos/avisos';
 
 
 
@@ -17,7 +17,7 @@ const App: React.FC = () => {
         <Route path="/" element={<AuthComponent />} />
         <Route path='/avisos' element={
           <PrivateRoute>
-            <HomePage />
+            <Avisos/>
           </PrivateRoute>
           }></Route>
         <Route path='/atividades' element={

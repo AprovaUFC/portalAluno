@@ -29,7 +29,7 @@ const fadeInUp = {
   exit: { opacity: 0, y: -20, transition: { duration: 0.5 } }
 }
 
-export default function HomePage() {
+export default function Avisos() {
   const [avisos, setAvisos] = useState<Aviso[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
