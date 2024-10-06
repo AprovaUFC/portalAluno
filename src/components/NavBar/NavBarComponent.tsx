@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { Button } from 'components/ui/button'
-import { BookOpen, GraduationCap, Home, LogOut, Menu, User } from 'lucide-react'
+import { Bell, BookOpen, GraduationCap, LogOut, Menu, User } from 'lucide-react'
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -38,19 +38,19 @@ const NavBarComponent = () => {
     </div>
     <ul className="space-y-2 p-4">
       <li>
-      <Link to={'/home'}>
+      <Link to={'/avisos'}>
         <Button
           variant="ghost"
           className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
         >
-          <Home className="mr-2 h-4 w-4" />
-          Início
+          <Bell className="mr-2 h-4 w-4" />
+          Avisos
           
         </Button>
         </Link>
       </li>
       <li>
-      <Link to={'/activites'}>
+      <Link to={'/atividades'}>
         <Button
           variant="ghost"
           className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
