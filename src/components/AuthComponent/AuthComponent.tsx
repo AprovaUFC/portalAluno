@@ -288,7 +288,7 @@ const AuthComponent = () => {
                                         type="submit"
                                         className="w-full bg-green-600 hover:bg-green-700"
                                     >
-                                         <Link to={'/Home'}>Entrar</Link>
+                                         <Link to={'/avisos'}>Entrar</Link>
                                         
                                     </Button>
                                 </form>
