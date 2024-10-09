@@ -106,18 +106,23 @@ export default function Avisos() {
                     <CardContent className="pt-4">
                       <p className="text-gray-700 mb-4">{aviso.descricao}</p>
 
-                      {aviso.imagem && (
-                        <div className="mb-4">
-                          <h3 className="font-semibold text-green-700 mb-2">Imagem:</h3>
-                          <div className="relative aspect-video">
-                            <img
-                              src={aviso.imagem}
-                              alt="Imagem do aviso"
-                              className="rounded-md"
-                            />
-                          </div>
+                      {aviso.imagem && Array.isArray(aviso.imagem) && aviso.imagem.length > 0 && (
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-green-700 mb-2">Imagens:</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {aviso.imagem.map((url: string, index: number) => (
+                            <div key={index} className="relative aspect-video">
+                              <img
+                                src={url}
+                                alt={`Imagem ${index + 1} do aviso`}
+                                className="rounded-md object-cover"
+                              />
+                            </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    )}
+
 
                       {aviso.arquivos && (
                         <div>
