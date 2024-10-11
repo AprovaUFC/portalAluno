@@ -1,7 +1,7 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase'; // Importe sua instância do Supabase
-import Loading from 'components/Loading/Loading';
+import { ReactNode, useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase"; // Importe sua instância do Supabase
+import Loading from "components/Loading/Loading";
 
 type PrivateRouteProps = {
   children: ReactNode;
@@ -22,9 +22,11 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     checkAuthentication();
 
     // Adiciona um listener para atualizar o status de autenticação quando a sessão mudar
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session?.user); // Atualiza a autenticação baseada na existência do usuário na sessão
-    });
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setIsAuthenticated(!!session?.user); // Atualiza a autenticação baseada na existência do usuário na sessão
+      }
+    );
 
     return () => {
       authListener.subscription.unsubscribe(); // Desinscreve-se ao desmontar o componente

@@ -21,6 +21,7 @@ export default function PaginaNotas() {
   const [busca, setBusca] = useState("");
   const [alunoId, setAlunoId] = useState<number | null>(null); // Aluno logado
   const [isLoading, setIsLoading] = useState(true);
+
   // Função para buscar o aluno logado
   const fetchAlunoLogado = async () => {
     const { data: sessionData, error } = await supabase.auth.getSession();
@@ -32,7 +33,7 @@ export default function PaginaNotas() {
 
     const user = sessionData.session.user;
     const userEmail = user?.email;
-    
+
     if (!userEmail) {
       console.error("Email do usuário não encontrado.");
       return;
@@ -40,9 +41,9 @@ export default function PaginaNotas() {
 
     // Buscar o ID do aluno baseado no email do usuário logado
     const { data: alunoData, error: alunoError } = await supabase
-      .from('Aluno')
-      .select('id')
-      .eq('email', userEmail)
+      .from("Aluno")
+      .select("id")
+      .eq("email", userEmail)
       .single(); // Usando single porque queremos apenas um resultado
 
     if (alunoError || !alunoData) {
@@ -53,9 +54,6 @@ export default function PaginaNotas() {
     setAlunoId(alunoData.id); // Definindo o alunoId
   };
 
-  // Função para buscar as notas do Supabase
-
-
   useEffect(() => {
     fetchAlunoLogado(); // Busca o aluno logado ao carregar o componente
   }, []);
@@ -63,41 +61,38 @@ export default function PaginaNotas() {
   useEffect(() => {
     const fetchNotas = async () => {
       setIsLoading(true); // Ativando o loading no início da busca
-  
+
       if (!alunoId) return;
-  
+
       const { data, error } = await supabase
-        .from('Nota')
+        .from("Nota")
         .select(`
           id, 
           nota, 
           dataEntrega, 
           aluno_id,
           Atividade: atividade_id (titulo)
-        `).eq('aluno_id',alunoId); // Buscando a atividade e o título relacionado
+        `)
+        .eq("aluno_id", alunoId); // Buscando a atividade e o título relacionado
 
-          console.log(data)
       if (error) {
         console.error("Erro ao buscar as notas: ", error);
       } else {
         // Mapeia os dados da API para o formato que será usado no componente
-        const notasMapeadas: Nota[] = (data).map((nota:any) => ({
+        const notasMapeadas: Nota[] = data.map((nota: any) => ({
           id: nota.id,
-          materia: nota.Atividade.titulo, // Acessa o primeiro item do array
+          materia: nota.Atividade.titulo,
           nota: nota.nota,
-          dataLimite: nota.dataEntrega,
-          aluno_id: nota.aluno_id
+          dataLimite: formatarData(nota.dataEntrega),
         }));
-        
-        console.log(notasMapeadas)
+
         setNotas(notasMapeadas || []);
         setNotasFiltered(notasMapeadas || []); // Inicializando o filtro com todas as notas
       }
-      
+
       setIsLoading(false); // Desativando o loading após carregar as notas
     };
 
-    
     if (alunoId) {
       fetchNotas(); // Busca as notas após obter o aluno logado
     }
@@ -111,79 +106,94 @@ export default function PaginaNotas() {
     setNotasFiltered(notasFiltradas);
   }, [busca, notas]);
 
+  // Função para formatar a data para um formato mais amigável (dd/MM/yyyy)
+  const formatarData = (data: string) => {
+    if (!data) return "";
+    const date = new Date(data);
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
   return (
-    <div className="flex min-h-screen  ">
-    <NavBarComponent/>
-    <motion.div 
-      className="p-8  rounded-xl w-screen flex-1 h-screen bg-green-50 py-12 px-4 sm:px-6 lg:px-8  "
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.h1 
-        className="text-4xl  font-bold mb-6 text-center text-green-800"
+    <div className="flex min-h-screen">
+      <NavBarComponent />
+      <motion.div
+        className="p-8 rounded-xl w-screen flex-1 h-screen bg-green-50 py-12 px-4 sm:px-6 lg:px-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        Notas do Aluno
-      </motion.h1>
-      <Card className="w-full rounded-xl shadow-lg">
-        <CardHeader className="bg-green-600 rounded-xl">
-          <CardTitle className="text-2xl rounded-xl text-white">Boletim de Notas</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          {isLoading ? (
-            <Loading /> // Mostra o componente de loading enquanto carrega
-          ) : (
-            <>
-              <motion.div 
-                className="mb-4  relative"
-              >
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Buscar por matéria..."
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  className="pl-10 border-green-300 focus:border-green-500 focus:ring-green-500"
-                />
-              </motion.div>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-green-700">Matéria</TableHead>
-                      <TableHead className="text-green-700">Nota</TableHead>
-                      <TableHead className="text-green-700">Data Entrega</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <AnimatePresence>
-                      {notasFiltered.map((nota) => (
-                        <motion.tr
-                          key={nota.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <TableCell className="font-medium">{nota.materia}</TableCell>
-                          <TableCell>
-                            <span className={`font-semibold ${nota.nota >= 7 ? 'text-green-600' : 'text-red-600'}`}>
-                              {nota.nota.toFixed(1)}
-                            </span>
-                          </TableCell>
-                          <TableCell>{nota.dataLimite}</TableCell>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                  </TableBody>
-                </Table>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+        <motion.h1
+          className="text-4xl font-bold mb-6 text-center text-green-800"
+        >
+          Notas do Aluno
+        </motion.h1>
+        <Card className="w-full rounded-xl shadow-lg">
+          <CardHeader className="bg-green-600 rounded-xl">
+            <CardTitle className="text-2xl rounded-xl text-white">
+              Boletim de Notas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {isLoading ? (
+              <Loading /> // Mostra o componente de loading enquanto carrega
+            ) : (
+              <>
+                <motion.div className="mb-4 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar por matéria..."
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    className="pl-10 border-green-300 focus:border-green-500 focus:ring-green-500"
+                  />
+                </motion.div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-green-700">Matéria</TableHead>
+                        <TableHead className="text-green-700">Nota</TableHead>
+                        <TableHead className="text-green-700">Data Entrega</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <AnimatePresence>
+                        {notasFiltered.map((nota) => (
+                          <motion.tr
+                            key={nota.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <TableCell className="font-medium">{nota.materia}</TableCell>
+                            <TableCell>
+                              {nota.nota === null || nota.nota === undefined ? (
+                                <span className="font-semibold text-gray-500">Nota ainda não aplicada</span>
+                              ) : (
+                                <span className={`font-semibold ${nota.nota >= 7 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {nota.nota.toFixed(1)}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>{nota.dataLimite}</TableCell>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

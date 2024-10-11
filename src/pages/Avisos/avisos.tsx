@@ -95,7 +95,7 @@ export default function Avisos() {
                           )}
                         </Avatar>
                         <div>
-                          <CardTitle className="text-white">{aviso.professor_id ? aviso.professor_id.nome : "Professor Desconhecido"}</CardTitle>
+                          <CardTitle className="text-white">{aviso.professor_id ? `Professor ${aviso.professor_id.nome}` : "Professor Desconhecido"}</CardTitle>
                           <CardDescription className="text-green-100">
                             {/* Formatando a data com date-fns */}
                             <span>{format(new Date(aviso.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>

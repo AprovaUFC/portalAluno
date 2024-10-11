@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -20,7 +18,6 @@ type Atividade = {
   dataLimite: string
 }
 
-
 const MotionCard = motion(Card)
 
 export default function Activities() {
@@ -28,70 +25,112 @@ export default function Activities() {
   const [atividadeSelecionada, setAtividadeSelecionada] = useState<Atividade | null>(null)
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [IsLoading,setIsLoading] = useState(true)
+  const [IsLoading, setIsLoading] = useState(true)
+  const [alunoId, setAlunoId] = useState<number | null>()
 
-  useEffect(() => {
-    // Gerencia o overflow da página baseado no estado do diálogo
-    if (isDialogOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
+  const fetchAlunoLogado = async () => {
+    const { data: sessionData, error } = await supabase.auth.getSession()
+
+    if (error || !sessionData.session) {
+      console.error("Erro ao obter sessão ou usuário não está logado: ", error)
+      return
     }
 
-    // Função para buscar as atividades do Supabase
+    const user = sessionData.session.user
+    const userEmail = user?.email
+    
+    if (!userEmail) {
+      console.error("Email do usuário não encontrado.")
+      return
+    }
+
+    const { data: alunoData, error: alunoError } = await supabase
+      .from('Aluno')
+      .select('id')
+      .eq('email', userEmail)
+      .single()
+
+    if (alunoError || !alunoData) {
+      console.error("Erro ao buscar aluno pelo email: ", alunoError)
+      return
+    }
+
+    setAlunoId(alunoData.id)
+  }
+
+  useEffect(() => {
+    fetchAlunoLogado()
+  }, [])
+
+  useEffect(() => {
+    if (!alunoId) return
+
     const fetchAtividades = async () => {
+      setIsLoading(true)
       try {
-        const { data, error } = await supabase
+        // Buscar todas as atividades
+        const { data: atividadesData, error: atividadesError } = await supabase
           .from('Atividade')
           .select('*')
 
-        if (error) {
-          console.error('Erro ao buscar atividades:', error)
-        } else {
-          const atividadesFiltradas = data.filter((atividade: Atividade) => {
-            // Converter dataLimite de varchar para Date
-            const [dia, mes, ano] = atividade.dataLimite.split('/')
-            const dataLimite = new Date(`${ano}-${mes}-${dia}`) // Formato yyyy-mm-dd
-            const dataAtual = new Date()
-
-            // Retornar atividades cujo dataLimite ainda não tenha passado
-            return dataAtual <= dataLimite
-          })
-          setAtividades(atividadesFiltradas ) // Armazena as atividades no estado
+        if (atividadesError) {
+          console.error('Erro ao buscar atividades:', atividadesError)
+          return
         }
+
+        // Buscar todas as notas do aluno logado
+        const { data: notasData, error: notasError } = await supabase
+          .from('Nota')
+          .select('atividade_id')
+          .eq('aluno_id', alunoId)
+
+        if (notasError) {
+          console.error('Erro ao buscar notas:', notasError)
+          return
+        }
+
+        const atividadesEnviadasIds = notasData?.map(nota => nota.atividade_id) || []
+
+        // Filtrar atividades que não têm registros na tabela Nota
+        const atividadesFiltradas = atividadesData.filter((atividade: Atividade) => {
+          const [dia, mes, ano] = atividade.dataLimite.split('/')
+          const dataLimite = new Date(`${ano}-${mes}-${dia}`)
+          const dataAtual = new Date()
+
+          // Verifica se a atividade já foi enviada e se o prazo ainda não expirou
+          return !atividadesEnviadasIds.includes(atividade.id) && dataAtual <= dataLimite
+        })
+
+        setAtividades(atividadesFiltradas)
       } catch (err) {
         console.error('Erro inesperado:', err)
-      }finally{
+      } finally {
         setIsLoading(false)
       }
     }
 
-    // Chama a função para buscar as atividades
     fetchAtividades()
 
-    // Cleanup para quando o componente for desmontado
     return () => {
       document.body.style.overflow = 'unset'
     }
-  }, [isDialogOpen])
+  }, [alunoId, isDialogOpen])
 
   const handleEnviarResposta = async () => {
-    if (!arquivo || !atividadeSelecionada) {
-      alert('Nenhum arquivo ou atividade selecionada.')
+    if (!arquivo || !atividadeSelecionada || !alunoId) {
+      alert('Nenhum arquivo, atividade selecionada ou aluno logado.')
       return
     }
 
     try {
       setIsLoading(true)
 
-      // Gerar nome único para o arquivo
       const fileExt = arquivo.name.split('.').pop()
       const fileName = `${Date.now()}.${fileExt}`
       const filePath = `arquivos/${fileName}`
-      console.log(filePath)
-      // Upload do arquivo para o bucket no Supabase
+
       const { error: uploadError } = await supabase.storage
-        .from('respostas_atividades') // Certifique-se de que este seja o nome do bucket
+        .from('respostas_atividades')
         .upload(filePath, arquivo)
 
       if (uploadError) {
@@ -99,34 +138,50 @@ export default function Activities() {
         return
       }
 
-      // Obter URL público do arquivo enviado
       const { data: publicURL } = supabase.storage.from('respostas_atividades').getPublicUrl(filePath)
       if (!publicURL) {
         console.error('Erro ao obter URL do arquivo.')
         return
       }
 
-      // Inserir atividade na tabela com o URL do arquivo
-      const { data: atividadeData, error: atividadeError } = await supabase
-        .from('Atividade') // Certifique-se de que o nome da tabela está correto
-        .update({ 
-          arquivo: publicURL,
-          status: 'ENTREGUE'
-        }) // Atualiza a atividade selecionada com o URL do arquivo
-        .eq('id', atividadeSelecionada.id) // Define qual atividade está sendo atualizada
+      // Atualizar o registro da atividade com o URL do arquivo
+      const { error: atividadeError } = await supabase
+        .from('Atividade')
+        .update({ arquivo: publicURL.publicUrl }) // Atualiza a coluna 'arquivo' com o URL do arquivo
+        .eq('id', atividadeSelecionada.id)
 
       if (atividadeError) {
-        console.error('Erro ao atualizar a atividade:', atividadeError.message)
+        console.error('Erro ao atualizar a tabela Atividade:', atividadeError.message)
         return
       }
 
-      console.log('Atividade atualizada com sucesso:', atividadeData)
-      setIsDialogOpen(false) // Fecha o diálogo após o sucesso
+      // Inserir o registro na tabela Nota
+      const { error: notaError } = await supabase
+        .from('Nota')
+        .insert({
+          aluno_id: alunoId,
+          atividade_id: atividadeSelecionada.id,
+          nota: null,
+          dataEntrega: new Date().toISOString()
+        })
+
+      if (notaError) {
+        console.error('Erro ao inserir na tabela Nota:', notaError.message)
+        return
+      }
+
+      console.log('Atividade e nota registradas com sucesso.')
+
+      // Remover a atividade do estado atividades
+      setAtividades((prevAtividades) =>
+        prevAtividades.filter((atividade) => atividade.id !== atividadeSelecionada.id)
+      )
+
+      setIsDialogOpen(false)
     } catch (err) {
       console.error('Erro inesperado:', err)
     } finally {
       setIsLoading(false)
-      
     }
   }
 
@@ -136,7 +191,7 @@ export default function Activities() {
 
       <div className="container mx-auto p-4 relative max-xl:pl-14 rounded-xl w-screen flex-1 h-screen bg-green-50 py-12 px-4 sm:px-6 lg:px-8">
         <motion.h1 
-          className="text-3xl font-bold mb-6 text-green-800 "
+          className="text-3xl font-bold mb-6 text-green-800"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -155,8 +210,7 @@ export default function Activities() {
             }
           }}
         >
-          {atividades.filter(atividade => atividade.status !== `AVALIADO`).map((atividade,index) => (
-
+          {atividades.map((atividade, index) => (
             <MotionCard 
               key={index} 
               className="flex flex-col"
@@ -172,7 +226,6 @@ export default function Activities() {
                   <BookOpen className="mr-2" />
                   {atividade.titulo}
                 </CardTitle>
-                
               </CardHeader>
               <CardContent className="flex-grow">
                 <p className="mb-2">{atividade.descricao}</p>
@@ -223,13 +276,12 @@ export default function Activities() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-6">
-                {IsLoading && (
-                  <Loading/>
-                )}
+                  {IsLoading && (
+                    <Loading />
+                  )}
                   <h2 className="text-2xl font-bold mb-4">{atividadeSelecionada?.titulo}</h2>
                   <p className="text-gray-600 mb-4">{atividadeSelecionada?.descricao}</p>
                   <div className="grid gap-4 py-4">
-                    
                     <div className="flex items-center text-sm text-gray-600">
                       <Clock className="mr-1" size={16} />
                       <span>Entrega: {atividadeSelecionada?.dataLimite}</span>
