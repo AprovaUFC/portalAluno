@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "components/ui/dialog";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
@@ -17,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const AuthComponent = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showModal,setShowModal] = useState(false)
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,16 +26,48 @@ const AuthComponent = () => {
   const [registerError, setRegisterError] = useState("");
   const [showApprovalStatus, setShowApprovalStatus] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<
-    "Aprovado" | "Pendente" | "ListaEspera"
-  >("Aprovado");
+    "APROVADO" | "PENDENTE" | "LISTA DE ESPERA"
+  >("PENDENTE");
   const navigate = useNavigate();
 
   // Função de login
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoginError(""); // Reseta o erro ao tentar login novamente
-
+    setIsLoading(true); // Inicia o estado de carregamento
+  
     try {
+      // Verifica o status do usuário antes de permitir o login
+      const { data: userStatusData, error: userStatusError } = await supabase
+        .from("Aluno")
+        .select("Status")
+        .eq("email", email);
+  
+      if (userStatusError) {
+        setIsLoading(false);
+        console.error("Erro ao verificar o status do usuário:", userStatusError.message);
+        setLoginError("Erro ao verificar o status do usuário. Tente novamente.");
+        return;
+      }
+  
+      if (!userStatusData || userStatusData.length === 0) {
+        setIsLoading(false);
+        setLoginError("Usuário não encontrado. Verifique suas credenciais.");
+        return;
+      }
+  
+      const status = userStatusData[0].Status;
+      if (status === "PENDENTE") {
+        setIsLoading(false);
+        setLoginError("Seu cadastro ainda não foi aprovado. Aguarde a aprovação.");
+        return;
+      }else if (status === "LISTA DE ESPERA") {
+        setIsLoading(false);
+        setLoginError("Seu cadastro foi colocado na lista de espera. Entre em contato com a instituição para mais informações.");
+        return;
+      }
+  
+      // Prossegue com o login se o status for APROVADO
       const {
         data: { user },
         error: authError,
@@ -41,26 +75,29 @@ const AuthComponent = () => {
         email,
         password,
       });
-
+  
       // Verifica se ocorreu um erro de autenticação
       if (authError || !user) {
+        setIsLoading(false);
         setLoginError("Email ou senha inválido."); // Mensagem de erro mais clara para o usuário
         return;
       }
-
+  
       // Login bem-sucedido
       console.log("Login bem-sucedido", user);
       navigate("/avisos"); // Redireciona para a página principal
     } catch (err) {
       console.error("Erro ao fazer login:", err);
       setLoginError("Erro ao fazer login. Tente novamente."); // Em caso de erro inesperado
+    } finally {
+      setIsLoading(false); // Finaliza o estado de carregamento
     }
   };
 
   // Função de registro
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setApprovalStatus("Pendente");
+    setApprovalStatus("PENDENTE");
     setIsLoading(true); // Inicia o estado de carregamento
 
     // Verifica se o email já existe na tabela 'Aluno' antes de tentar cadastrar o usuário
@@ -126,7 +163,7 @@ const AuthComponent = () => {
         name: name,
         dataNascimento: new Date().toISOString(), // Ajuste para a data de nascimento correta
         email: user.email,
-        Status: approvalStatus, // Inicialmente, o status pode ser 'Pendente'
+        Status: approvalStatus, // Inicialmente, o status pode ser 'PENDENTE'
       },
     ]);
 
@@ -140,6 +177,7 @@ const AuthComponent = () => {
     } else {
       console.log("Usuário registrado com sucesso e inserido na tabela aluno");
       setShowApprovalStatus(true); // Redireciona para verificar status de aprovação
+      setShowModal(true)
     }
   };
 
@@ -189,7 +227,7 @@ const AuthComponent = () => {
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
-                  {approvalStatus === "Pendente" && (
+                  {approvalStatus === "PENDENTE" && (
                     <>
                       <div className="text-yellow-500 flex items-center justify-center">
                         <Bell className="h-12 w-12" />
@@ -200,7 +238,7 @@ const AuthComponent = () => {
                       <p>Aguarde a aprovação para acessar o portal</p>
                     </>
                   )}
-                  {approvalStatus === "Aprovado" && (
+                  {approvalStatus === "APROVADO" && (
                     <>
                       <div className="text-green-500 flex items-center justify-center">
                         <CheckCircle className="h-12 w-12" />
@@ -211,7 +249,7 @@ const AuthComponent = () => {
                       <p>Você já pode fazer login no portal</p>
                     </>
                   )}
-                  {approvalStatus === "ListaEspera" && (
+                  {approvalStatus === "LISTA DE ESPERA" && (
                     <>
                       <div className="text-yellow-500 flex items-center justify-center">
                         <XCircle className="h-12 w-12" />
@@ -349,6 +387,16 @@ const AuthComponent = () => {
           </Tabs>
         </CardContent>
       </Card>
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cadastro Realizado!</DialogTitle>
+            <DialogDescription>
+              Verifique a caixa de mensagens do email inserido no cadastro para confirmar o email.
+            </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
     </div>
   );
 };
