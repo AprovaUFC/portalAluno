@@ -18,7 +18,9 @@ import { Link, useNavigate } from "react-router-dom";
 
 const AuthComponent = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [showModal,setShowModal] = useState(false)
+  const [showModal,setShowModal] = useState(false);
+  const [forgotPasswordModal, setForgotPasswordModal] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -92,6 +94,20 @@ const AuthComponent = () => {
     } finally {
       setIsLoading(false); // Finaliza o estado de carregamento
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setResetMessage('');
+    setIsLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) {
+      setResetMessage('Erro ao tentar recuperar senha. Verifique o email inserido.');
+    } else {
+      setResetMessage('Um email de recuperação foi enviado. Por favor, verifique sua caixa de entrada.');
+    }
+
+    setIsLoading(false)
   };
 
   // Função de registro
@@ -206,17 +222,11 @@ const AuthComponent = () => {
     setShowApprovalStatus(true);
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+
 
   // Exibir a tela de status de aprovação
   if (showApprovalStatus) {
     return (
-      <div>
-        {isLoading ? (
-          <Loading />
-        ) : (
           <div className="flex items-center justify-center min-h-screen bg-green-50 max-sm:p-6">
             <Card className="w-[400px]">
               <CardHeader className="bg-green-600 text-white rounded-t-lg">
@@ -270,10 +280,10 @@ const AuthComponent = () => {
                   </Button>
                 </div>
               </CardContent>
+            
             </Card>
+            {isLoading && (<Loading/>)}
           </div>
-        )}
-      </div>
     );
   }
 
@@ -329,6 +339,21 @@ const AuthComponent = () => {
                 >
                   <Link to={"/avisos"}>Entrar</Link>
                 </Button>
+              <Button type="button" variant="link" onClick={() => setForgotPasswordModal(true)} className="mt-2 w-full self-center">
+                Esqueceu sua senha?
+              </Button>
+
+                {/* Exibe a mensagem de erro se houver */}
+                {loginError && (
+                    <p className="text-red-500 text-sm">
+                        {loginError}
+                    </p>
+                )}
+                {registerError && (
+                    <p className='text-red-500 text-sm'>
+                        {registerError}
+                    </p>
+                )}
               </form>
               <div className="mt-4 text-center">
                 <Button
@@ -387,6 +412,7 @@ const AuthComponent = () => {
           </Tabs>
         </CardContent>
       </Card>
+
       <Dialog open={showModal} onOpenChange={setShowModal}>
       <DialogContent>
         <DialogHeader>
@@ -397,6 +423,35 @@ const AuthComponent = () => {
         </DialogHeader>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={forgotPasswordModal} onOpenChange={setForgotPasswordModal}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Recuperar Senha</DialogTitle>
+          <DialogDescription>
+            Insira seu email para receber instruções de redefinição de senha.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleForgotPassword} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="reset-email">Email</Label>
+            <Input
+              id="reset-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="border-green-300 focus:border-green-500 focus:ring-green-500"
+            />
+          </div>
+          <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">Enviar Email de Recuperação</Button>
+        </form>
+        {resetMessage && (
+          <p className="mt-4 text-green-500 text-sm">{resetMessage}</p>
+        )}
+      </DialogContent>
+    </Dialog>
+    {isLoading && (<Loading/>)}
     </div>
   );
 };

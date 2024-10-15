@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import PerfilAluno from "@/pages/Perfil/perfil";
 import PaginaNotas from "@/pages/Notas/notas";
 import Avisos from "@/pages/Avisos/avisos";
+import ResetSenha from "@/pages/ResetSenha/ResetSenha";
 
 const App: React.FC = () => {
   return (
@@ -45,6 +46,8 @@ const App: React.FC = () => {
             </PrivateRoute>
           }
         ></Route>
+        <Route 
+        path="/reset-password" element={<ResetSenha/>}></Route>
       </Routes>
     </Router>
   );
