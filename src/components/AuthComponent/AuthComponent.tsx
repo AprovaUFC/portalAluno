@@ -339,18 +339,6 @@ const AuthComponent = () => {
               <Button type="button" variant="link" onClick={() => setForgotPasswordModal(true)} className="mt-2 w-full self-center">
                 Esqueceu sua senha?
               </Button>
-
-                {/* Exibe a mensagem de erro se houver */}
-                {loginError && (
-                    <p className="text-red-500 text-sm">
-                        {loginError}
-                    </p>
-                )}
-                {registerError && (
-                    <p className='text-red-500 text-sm'>
-                        {registerError}
-                    </p>
-                )}
               </form>
               <div className="mt-4 text-center">
                 <Button
