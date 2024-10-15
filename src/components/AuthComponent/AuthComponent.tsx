@@ -86,7 +86,6 @@ const AuthComponent = () => {
       }
   
       // Login bem-sucedido
-      console.log("Login bem-sucedido", user);
       navigate("/avisos"); // Redireciona para a página principal
     } catch (err) {
       console.error("Erro ao fazer login:", err);
@@ -171,7 +170,6 @@ const AuthComponent = () => {
       return;
     }
 
-    console.log(user);
 
     // Aqui vamos adicionar os dados do usuário na tabela 'aluno'
     const { error: insertError } = await supabase.from("Aluno").insert([
@@ -191,7 +189,6 @@ const AuthComponent = () => {
         insertError.message
       );
     } else {
-      console.log("Usuário registrado com sucesso e inserido na tabela aluno");
       setShowApprovalStatus(true); // Redireciona para verificar status de aprovação
       setShowModal(true)
     }
@@ -211,11 +208,10 @@ const AuthComponent = () => {
       console.error("Erro ao buscar o status:", error);
     } else if (data && data.length > 0) {
       const status = data[0].Status;
-      console.log("Status encontrado:", status);
       setApprovalStatus(status);
     } else {
       setShowApprovalStatus(false);
-      console.log("Nenhum usuário encontrado com esse email.");
+      console.error("Nenhum usuário encontrado com esse email.");
       return;
     }
 
@@ -288,6 +284,7 @@ const AuthComponent = () => {
   }
 
   return (
+   
     <div className="flex items-center justify-center min-h-screen bg-green-50 max-sm:p-6">
       <Card className="w-[400px]">
         <CardHeader className="bg-green-600 text-white rounded-t-lg">
@@ -448,7 +445,7 @@ const AuthComponent = () => {
         </form>
         {resetMessage && (
           <p className="mt-4 text-green-500 text-sm">{resetMessage}</p>
-        )}
+        )} {isLoading && (<Loading/>)}
       </DialogContent>
     </Dialog>
     {isLoading && (<Loading/>)}

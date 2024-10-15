@@ -42,12 +42,12 @@ export default function Avisos() {
           .order('created_at', { ascending: false }) // Ordena pela data de criação em ordem decrescente
   
         if (error) {
-          console.log('Erro', error)
+          console.error('Erro', error)
         } else {
           setAvisos(data)
         }
       } catch (err) {
-        console.log(err)
+        console.error(err)
       } finally {
         setIsLoading(false)
       }

@@ -170,7 +170,6 @@ export default function Activities() {
         return
       }
 
-      console.log('Atividade e nota registradas com sucesso.')
 
       // Remover a atividade do estado atividades
       setAtividades((prevAtividades) =>

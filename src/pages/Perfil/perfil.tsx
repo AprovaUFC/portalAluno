@@ -137,16 +137,13 @@ export default function PerfilAluno() {
         const fileName = `${user.id}/profile_${new Date().getTime()}.${fileExt}`;
   
         // Faz o upload da imagem para o Supabase Storage no bucket "avatars"
-        const { data, error } = await supabase.storage
+        const {  error } = await supabase.storage
           .from('avatars')
           .upload(fileName, blob, {
             upsert: true,
             contentType: blob.type,
           });
-          if(data){
-            console.log(`Data${data}`)
-          }
-        else if (error) {
+          if (error) {
           console.error("Erro ao fazer upload da imagem:", error);
           return;
         }
@@ -245,8 +242,7 @@ export default function PerfilAluno() {
         size,
         size
       );
-      // console.log("URL da imagem antes do recorte:", imageSrc);
-
+     
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
           if (!blob) {
