@@ -98,7 +98,7 @@ export default function PerfilAluno() {
         setIsImageLoading(false)
       }
     };
-    
+    console.log(alunoInfo.email)
     fetchData();
   }, []);
   
@@ -109,7 +109,7 @@ export default function PerfilAluno() {
   }
 
   const handleSave = async () => {
-    setIsImageLoading(true)
+    setIsImageLoading(true);
     try {
       let fotoPerfilUrl = alunoInfo.fotoPerfil;
   
@@ -128,34 +128,41 @@ export default function PerfilAluno() {
       }
   
       if (novaInfo.fotoPerfil !== alunoInfo.fotoPerfil && novaInfo.fotoPerfil.startsWith("blob:")) {
-        // Se uma nova imagem foi selecionada e cortada
         const response = await fetch(novaInfo.fotoPerfil);
         const blob = await response.blob();
         const fileExt = blob.type.split('/')[1];
-  
-        // Nome do arquivo único baseado no UID do usuário e timestamp
         const fileName = `${user.id}/profile_${new Date().getTime()}.${fileExt}`;
   
-        // Faz o upload da imagem para o Supabase Storage no bucket "avatars"
-        const {  error } = await supabase.storage
+        const { error } = await supabase.storage
           .from('avatars')
           .upload(fileName, blob, {
             upsert: true,
             contentType: blob.type,
           });
-          if (error) {
+        if (error) {
           console.error("Erro ao fazer upload da imagem:", error);
           return;
         }
   
-        // Pega a URL pública da imagem no bucket "avatars"
         const { data: publicUrl } = supabase.storage.from('avatars').getPublicUrl(fileName);
-        fotoPerfilUrl = `${publicUrl.publicUrl}?t=${new Date().getTime()}`; // Adiciona cache-busting
+        fotoPerfilUrl = `${publicUrl.publicUrl}?t=${new Date().getTime()}`;
         setNovaInfo({ ...novaInfo, fotoPerfil: fotoPerfilUrl });
       }
 
+    if(alunoInfo.email !== novaInfo.email){
+      // Atualiza o email na autenticação do Supabase
+      const { error: authError } = await supabase.auth.updateUser({
+        email: novaInfo.email,
+      });
+
+      if (authError) {
+        console.error('Erro ao atualizar o email na autenticação:', authError);
+        return;
+      }
+    }
+  
       // Atualiza os dados do aluno no banco de dados
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('Aluno')
         .update({
           name: novaInfo.nome,
@@ -164,18 +171,25 @@ export default function PerfilAluno() {
         })
         .eq('email', alunoInfo.email);
   
-      if (error) {
-        console.error('Erro ao atualizar as informações do aluno:', error);
-      } else {
-        setAlunoInfo(novaInfo); // Atualiza o estado com as novas informações
-        setEditando(false); // Sai do modo de edição
+      if (updateError) {
+        console.error('Erro ao atualizar as informações do aluno:', updateError);
+        return;
       }
+  
+
+  
+
+  
+      setAlunoInfo(novaInfo); // Atualiza o estado com as novas informações
+      setEditando(false); // Sai do modo de edição
+  
     } catch (error) {
       console.error('Erro ao salvar as alterações:', error);
-    }finally{
-      setIsImageLoading(false)
+    } finally {
+      setIsImageLoading(false);
     }
   };
+  
   
   
   
