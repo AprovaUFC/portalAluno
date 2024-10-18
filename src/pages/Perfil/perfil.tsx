@@ -50,6 +50,8 @@ export default function PerfilAluno() {
     fotoPerfil: "/logo.png"
   })
   const [novaInfo, setNovaInfo] = useState<AlunoInfo>(alunoInfo)
+  const [showConfirmEmailModal, setShowConfirmEmailModal] = useState(false);
+
 
   useEffect(() => {
     setIsLoading(true)
@@ -63,7 +65,7 @@ export default function PerfilAluno() {
 
   
         if (user) {
-          const userEmail = user.email;
+          const userEmail = user?.email ?? '';
           const { data, error } = await supabase
             .from("Aluno")
             .select("name, email, perfil")
@@ -75,7 +77,7 @@ export default function PerfilAluno() {
             const fetchedAlunoInfo = data[0];
             setAlunoInfo({
               nome: fetchedAlunoInfo.name,
-              email: fetchedAlunoInfo.email,
+              email: userEmail,
               fotoPerfil: fetchedAlunoInfo.perfil && fetchedAlunoInfo.perfil !== '' 
                 ? fetchedAlunoInfo.perfil 
                 : "/placeholder.svg?height=128&width=128",
@@ -83,13 +85,13 @@ export default function PerfilAluno() {
             });
             setNovaInfo({
               nome: fetchedAlunoInfo.name,
-              email: fetchedAlunoInfo.email,
+              email: userEmail,
               fotoPerfil: fetchedAlunoInfo.perfil && fetchedAlunoInfo.perfil !== '' 
                 ? fetchedAlunoInfo.perfil 
                 : "/placeholder.svg?height=128&width=128",
             });
-
           }
+         
         }
       } catch (error) {
         console.error("Erro durante o fetch:", error);
@@ -98,9 +100,32 @@ export default function PerfilAluno() {
         setIsImageLoading(false)
       }
     };
-    console.log(alunoInfo.email)
+
+    const checkEmailConfirmation = async () => {
+      try {
+        setShowConfirmEmailModal(true)
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Erro ao verificar confirmação do email:', error);
+          return;
+        }
+        
+        // Verifica se o email do usuário foi confirmado
+        if (user && user.email_confirmed_at) {
+          setShowConfirmEmailModal(false); // Fecha o modal automaticamente
+        }
+      } catch (error) {
+        console.error('Erro ao checar confirmação de email:', error);
+      }
+    };
+  
+    // Executa a verificação de e-mail a cada 5 segundos até que o modal seja fechado
+    if (showConfirmEmailModal) {
+      const intervalId = setInterval(checkEmailConfirmation, 5000);
+      return () => clearInterval(intervalId);
+    }
     fetchData();
-  }, []);
+  }, [showConfirmEmailModal]);
   
 
   const handleEdit = () => {
@@ -154,6 +179,7 @@ export default function PerfilAluno() {
       const { error: authError } = await supabase.auth.updateUser({
         email: novaInfo.email,
       });
+      setShowConfirmEmailModal(true)
 
       if (authError) {
         console.error('Erro ao atualizar o email na autenticação:', authError);
@@ -166,7 +192,7 @@ export default function PerfilAluno() {
         .from('Aluno')
         .update({
           name: novaInfo.nome,
-          email: novaInfo.email,
+          email: user.email,
           perfil: fotoPerfilUrl,
         })
         .eq('email', alunoInfo.email);
@@ -314,9 +340,7 @@ export default function PerfilAluno() {
           >
             Perfil do Aluno
           </motion.h1>
-          {isLoading && (
-            <Loading/>
-        )}
+         
           <motion.div variants={fadeInUp}>
             
             <Card className="w-full shadow-lg overflow-hidden">
@@ -489,6 +513,22 @@ export default function PerfilAluno() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showConfirmEmailModal} onOpenChange={setShowConfirmEmailModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmação de Mudança de Email</DialogTitle>
+            <DialogDescription>
+              Verifique sua caixa de email para confirmar a mudança de email. A alteração será realizada apenas após a confirmação.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {isLoading && (
+            <Loading/>
+        )}
     </AnimatePresence>
     </div>
   )
