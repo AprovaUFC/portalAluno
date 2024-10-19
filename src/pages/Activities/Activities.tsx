@@ -16,6 +16,7 @@ type Atividade = {
   dataEntrega: string
   status: "PENDENTE" | "ENTREGUE" | "AVALIADO"
   dataLimite: string
+  dataDisponivel: string
 }
 
 const MotionCard = motion(Card)
@@ -93,12 +94,18 @@ export default function Activities() {
 
         // Filtrar atividades que não têm registros na tabela Nota
         const atividadesFiltradas = atividadesData.filter((atividade: Atividade) => {
+          const [diaDisponivel, mesDisponivel, anoDisponivel] = atividade.dataDisponivel.split('/')
           const [dia, mes, ano] = atividade.dataLimite.split('/')
+          const dataDisponivel = new Date(`${anoDisponivel}-${mesDisponivel}-${diaDisponivel}`)
           const dataLimite = new Date(`${ano}-${mes}-${dia}`)
           const dataAtual = new Date()
 
           // Verifica se a atividade já foi enviada e se o prazo ainda não expirou
-          return !atividadesEnviadasIds.includes(atividade.id) && dataAtual <= dataLimite
+          return (
+            !atividadesEnviadasIds.includes(atividade.id) &&
+            dataAtual >= dataDisponivel &&
+            dataAtual <= dataLimite
+          )
         })
 
         setAtividades(atividadesFiltradas)
