@@ -14,6 +14,7 @@ import { User, Mail, Camera, Pencil, ZoomIn } from "lucide-react"
 import NavBarComponent from "components/NavBar/NavBarComponent"
 import { supabase } from "@/lib/supabase"
 import Loading from "components/Loading/Loading"
+import { toast } from "react-toastify"
 
 type AlunoInfo = {
   nome: string
@@ -112,6 +113,17 @@ export default function PerfilAluno() {
         
         // Verifica se o email do usuário foi confirmado
         if (user && user.email_confirmed_at) {
+          const { error} = await supabase
+          .from('Aluno')
+          .update({
+            
+            email: novaInfo.email,
+            
+          })
+          .eq('email', alunoInfo.email);
+          if(error){
+            toast.error(`Error ao atualizar email: ${error}`)
+          }
           setShowConfirmEmailModal(false); // Fecha o modal automaticamente
         }
       } catch (error) {
@@ -192,7 +204,6 @@ export default function PerfilAluno() {
         .from('Aluno')
         .update({
           name: novaInfo.nome,
-          email: user.email,
           perfil: fotoPerfilUrl,
         })
         .eq('email', alunoInfo.email);
