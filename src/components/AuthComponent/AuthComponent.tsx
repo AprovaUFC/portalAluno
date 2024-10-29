@@ -138,6 +138,28 @@ const AuthComponent = () => {
       return; // Interrompe a execução se o email já estiver na tabela
     }
 
+
+    const {data:alunoData, error: insertError } = await supabase.from("Aluno").insert([
+      {
+        name: name,
+        email: email,
+        Status: approvalStatus, // Inicialmente, o status pode ser 'PENDENTE'
+      },
+    ]).select('id')
+    .single();
+
+   
+    if (insertError || !alunoData) {
+      console.error(
+        "Erro ao inserir dados na tabela aluno:",
+        insertError.message
+      );
+    } else {
+      setShowApprovalStatus(true); // Redireciona para verificar status de aprovação
+      setShowModal(true)
+    }
+    const alunoId = alunoData?.id 
+
     // Se o email não estiver registrado, tenta registrar o usuário no Supabase
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -145,6 +167,7 @@ const AuthComponent = () => {
       options: {
         data: {
           name: name, // Adiciona o nome completo ao perfil do usuário
+          aluno_id : alunoId
         },
       },
     });
@@ -171,27 +194,9 @@ const AuthComponent = () => {
     }
 
 
-    // Aqui vamos adicionar os dados do usuário na tabela 'aluno'
-    const { error: insertError } = await supabase.from("Aluno").insert([
-      {
-        name: name,
-        dataNascimento: new Date().toISOString(), // Ajuste para a data de nascimento correta
-        email: user.email,
-        Status: approvalStatus, // Inicialmente, o status pode ser 'PENDENTE'
-      },
-    ]);
-
     setIsLoading(false); // Finaliza o estado de carregamento após a inserção dos dados
 
-    if (insertError) {
-      console.error(
-        "Erro ao inserir dados na tabela aluno:",
-        insertError.message
-      );
-    } else {
-      setShowApprovalStatus(true); // Redireciona para verificar status de aprovação
-      setShowModal(true)
-    }
+
   };
 
   const handleCheckApprovalStatus = async () => {

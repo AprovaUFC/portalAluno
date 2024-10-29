@@ -64,13 +64,13 @@ export default function PerfilAluno() {
           return;
         }
 
-  
-        if (user) {
-          const userEmail = user?.email ?? '';
+        console.log(user)
+        if (user && user.identities && user.identities.length > 0) {
+          const userId = user.identities[0].identity_data?.aluno_id ?? "";          
           const { data, error } = await supabase
             .from("Aluno")
             .select("name, email, perfil")
-            .eq("email", userEmail);
+            .eq("id", userId);
   
           if (error) {
             console.error("Erro ao buscar as informações do usuário:", error);
@@ -78,7 +78,7 @@ export default function PerfilAluno() {
             const fetchedAlunoInfo = data[0];
             setAlunoInfo({
               nome: fetchedAlunoInfo.name,
-              email: userEmail,
+              email: fetchedAlunoInfo.email,
               fotoPerfil: fetchedAlunoInfo.perfil && fetchedAlunoInfo.perfil !== '' 
                 ? fetchedAlunoInfo.perfil 
                 : "/placeholder.svg?height=128&width=128",
@@ -86,7 +86,7 @@ export default function PerfilAluno() {
             });
             setNovaInfo({
               nome: fetchedAlunoInfo.name,
-              email: userEmail,
+              email: fetchedAlunoInfo.email,
               fotoPerfil: fetchedAlunoInfo.perfil && fetchedAlunoInfo.perfil !== '' 
                 ? fetchedAlunoInfo.perfil 
                 : "/placeholder.svg?height=128&width=128",
@@ -112,7 +112,9 @@ export default function PerfilAluno() {
         }
         
         // Verifica se o email do usuário foi confirmado
-        if (user && user.email_confirmed_at) {
+        if (user && user.email_confirmed_at && user.identities && user.identities.length > 0) {
+          const userId = user.identities[0].identity_data?.aluno_id ?? "";
+          if(user.email === novaInfo.email){
           const { error} = await supabase
           .from('Aluno')
           .update({
@@ -120,12 +122,13 @@ export default function PerfilAluno() {
             email: novaInfo.email,
             
           })
-          .eq('email', alunoInfo.email);
+          .eq('id', userId);
           if(error){
             toast.error(`Error ao atualizar email: ${error}`)
           }
           setShowConfirmEmailModal(false); // Fecha o modal automaticamente
         }
+      }
       } catch (error) {
         console.error('Erro ao checar confirmação de email:', error);
       }
