@@ -12,11 +12,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
-import { Bell, CheckCircle, XCircle } from "lucide-react";
-import { useState } from "react";
+import { Bell, CheckCircle, FileText, X, XCircle } from "lucide-react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+type Arquivo = {
+  nome: string
+  tipo: "imagem" | "documento"
+  url: string
+  arquivo: File
+}
+
 const AuthComponent = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isLoading, setIsLoading] = useState(false);
   const [showModal,setShowModal] = useState(false);
   const [forgotPasswordModal, setForgotPasswordModal] = useState(false);
@@ -30,7 +38,35 @@ const AuthComponent = () => {
   const [approvalStatus, setApprovalStatus] = useState<
     "APROVADO" | "PENDENTE" | "LISTA DE ESPERA"
   >("PENDENTE");
+  const [arquivos, setArquivos] = useState<Arquivo[]>([])
   const navigate = useNavigate();
+
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Substitui o arquivo existente com o novo
+      const file = files[0];
+      const tipo: "imagem" | "documento" = file.type.startsWith("image/") ? "imagem" : "documento";
+  
+      const novoArquivo: Arquivo = {
+        
+        nome: file.name,
+        tipo: tipo,
+        url: URL.createObjectURL(file),
+        arquivo: file,
+      };
+  
+      setArquivos([novoArquivo]); // Substitui o array de arquivos com o novo arquivo
+    }
+  };
+
+  const removerArquivo = (index: number) => {
+    const novosArquivos = [...arquivos];
+    URL.revokeObjectURL(novosArquivos[index].url);
+    novosArquivos.splice(index, 1);
+    setArquivos(novosArquivos);
+  };
 
   // Função de login
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -113,91 +149,103 @@ const AuthComponent = () => {
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setApprovalStatus("PENDENTE");
-    setIsLoading(true); // Inicia o estado de carregamento
-
+    setIsLoading(true);
+  
     // Verifica se o email já existe na tabela 'Aluno' antes de tentar cadastrar o usuário
     const { data: existingUserData, error: existingUserError } = await supabase
       .from("Aluno")
       .select("email")
       .eq("email", email);
-
+  
     if (existingUserError) {
       setIsLoading(false);
-      console.error(
-        "Erro ao verificar se o email já existe:",
-        existingUserError.message
-      );
+      console.error("Erro ao verificar se o email já existe:", existingUserError.message);
       return;
     }
-
+  
     if (existingUserData && existingUserData.length > 0) {
       setIsLoading(false);
-      setRegisterError("Email ja cadastrado, tente efetuar ou login");
+      setRegisterError("Email já cadastrado, tente efetuar login");
       console.error("Erro: Email já está cadastrado na tabela de alunos.");
-      // alert('O email fornecido já está cadastrado. Tente fazer login ou usar outro email.');
-      return; // Interrompe a execução se o email já estiver na tabela
+      return;
     }
+  
+    // Envia os arquivos para o storage e obtém as URLs
+    const arquivo = arquivos[0]; // Pega o único arquivo, já que o array é sempre substituído
 
-
-    const {data:alunoData, error: insertError } = await supabase.from("Aluno").insert([
-      {
-        name: name,
-        email: email,
-        Status: approvalStatus, // Inicialmente, o status pode ser 'PENDENTE'
-      },
-    ]).select('id')
-    .single();
-
-   
+    const { error: uploadError } = await supabase.storage
+      .from("doc_alunos")
+      .upload(`${arquivo.nome}`, arquivo.arquivo);
+    
+    if (uploadError) {
+      console.error("Erro ao enviar arquivo para o storage:", uploadError.message);
+      return;
+    }
+    
+    // Obtém a URL pública do arquivo
+    const { data: publicURLData } = supabase.storage
+      .from("doc_alunos")
+      .getPublicUrl(`${arquivo.nome}`);
+    
+    const publicURL = publicURLData?.publicUrl ?? null;
+    
+    // Insere o aluno na tabela 'Aluno' com a URL do arquivo
+    const { data: alunoData, error: insertError } = await supabase
+      .from("Aluno")
+      .insert([
+        {
+          name: name,
+          email: email,
+          Status: approvalStatus,
+          documentos: publicURL, // Armazena a URL como string
+        },
+      ])
+      .select("id")
+      .single();
+    
     if (insertError || !alunoData) {
-      console.error(
-        "Erro ao inserir dados na tabela aluno:",
-        insertError.message
-      );
-    } else {
-      setShowApprovalStatus(true); // Redireciona para verificar status de aprovação
-      setShowModal(true)
+      setIsLoading(false);
+      console.error("Erro ao inserir dados na tabela aluno:", insertError?.message);
+      return;
     }
-    const alunoId = alunoData?.id 
-
-    // Se o email não estiver registrado, tenta registrar o usuário no Supabase
+    
+  
+    const alunoId = alunoData.id;
+  
+    // Registra o usuário no Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          name: name, // Adiciona o nome completo ao perfil do usuário
-          aluno_id : alunoId
+          name: name,
+          aluno_id: alunoId
         },
       },
     });
-
+  
     if (error) {
-      setIsLoading(false); // Finaliza o estado de carregamento em caso de erro
-
-      // Verifica se o erro é devido ao email já estar registrado no auth
+      setIsLoading(false);
       if (error.message.includes("already registered")) {
         console.error("Erro: Email já está registrado no Supabase Auth.");
-        // alert('O email fornecido já está cadastrado no sistema. Tente fazer login ou usar outro email.');
       } else {
         console.error("Erro ao cadastrar:", error.message);
       }
-      return; // Interrompe a execução da função se houver erro
+      return;
     }
-
-    // Se o cadastro for bem-sucedido, insira o usuário na tabela 'aluno'
+  
     const user = data?.user;
     if (!user) {
-      setIsLoading(false); // Finaliza o estado de carregamento em caso de erro
+      setIsLoading(false);
       console.error("Erro: Usuário não foi criado corretamente.");
       return;
     }
-
-
-    setIsLoading(false); // Finaliza o estado de carregamento após a inserção dos dados
-
-
+  
+    setIsLoading(false); // Finaliza o estado de carregamento
+    setShowApprovalStatus(true);
+    setShowModal(true);
   };
+  
 
   const handleCheckApprovalStatus = async () => {
     setIsLoading(true); // Inicia o estado de carregamento
@@ -390,7 +438,55 @@ const AuthComponent = () => {
                     className="border-green-300 focus:border-green-500 focus:ring-green-500"
                   />
                 </div>
-
+                <div>
+                <Label>Anexos/Documentos</Label>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-green-100 text-green-700 hover:bg-green-200"
+                    >
+                      Adicionar Arquivo
+                    </Button>
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileChange}
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                    />
+                    <div>
+                      {arquivos.map((arquivo, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white p-2 rounded-md shadow">
+                          {arquivo.tipo === "imagem" ? (
+                            <div className="relative aspect-video">
+                              <img
+                                src={arquivo.url}
+                                alt={arquivo.nome}
+                                className="rounded-md object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <FileText className="text-green-600" size={24} />
+                              <span className="text-sm truncate">{arquivo.nome}</span>
+                            </div>
+                          )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700 hover:bg-white"
+                            onClick={() => removerArquivo(index)}
+                          >
+                            <X size={16}  />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <Button
                   type="submit"
                   className="w-full bg-green-600 hover:bg-green-700"
