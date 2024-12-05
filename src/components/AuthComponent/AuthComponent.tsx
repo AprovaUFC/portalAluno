@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
-import { CheckboxText } from "components/Checkbox/CheckboxText";
+import ApprovalStatus from "components/ApprovalStatus/ApprovalStatus";
 import Loading from "components/Loading/Loading";
+import LoginSection from "components/LoginSection/LoginSection";
+import SignUpSection from "components/SignUpSection/SignUpSection";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -13,9 +15,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
-import { Bell, CheckCircle, FileText, X, XCircle } from "lucide-react";
 import { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 
 type Arquivo = {
   nome: string
@@ -293,63 +294,11 @@ const AuthComponent = () => {
   // Exibir a tela de status de aprovação
   if (showApprovalStatus) {
     return (
-          <div className="flex items-center justify-center min-h-screen bg-green-50 max-sm:p-6">
-            <Card className="w-[400px]">
-              <CardHeader className="bg-green-600 text-white rounded-t-lg">
-                <CardTitle>Status de Aprovação</CardTitle>
-                <CardDescription className="text-green-100">
-                  Verifique o status do seu processo seletivo
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  {approvalStatus === "PENDENTE" && (
-                    <>
-                      <div className="text-yellow-500 flex items-center justify-center">
-                        <Bell className="h-12 w-12" />
-                      </div>
-                      <p className="text-lg font-semibold">
-                        Seu cadastro está em análise
-                      </p>
-                      <p>Aguarde a aprovação para acessar o portal</p>
-                    </>
-                  )}
-                  {approvalStatus === "APROVADO" && (
-                    <>
-                      <div className="text-green-500 flex items-center justify-center">
-                        <CheckCircle className="h-12 w-12" />
-                      </div>
-                      <p className="text-lg font-semibold">
-                        Parabéns! Seu cadastro foi aprovado
-                      </p>
-                      <p>Você já pode fazer login no portal</p>
-                    </>
-                  )}
-                  {approvalStatus === "LISTA DE ESPERA" && (
-                    <>
-                      <div className="text-yellow-500 flex items-center justify-center">
-                        <XCircle className="h-12 w-12" />
-                      </div>
-                      <p className="text-lg font-semibold">
-                        Desculpe, seu cadastro foi para a Lista de Espera
-                      </p>
-                      <p>
-                        Entre em contato com a instituição para mais informações
-                      </p>
-                    </>
-                  )}
-                  <Button
-                    onClick={() => setShowApprovalStatus(false)}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                  >
-                    Voltar para Login
-                  </Button>
-                </div>
-              </CardContent>
-            
-            </Card>
-            {isLoading && (<Loading/>)}
-          </div>
+        <ApprovalStatus
+          isLoading = {isLoading}
+          approvalStatus= {approvalStatus}
+          setShowApprovalStatus={setShowApprovalStatus}
+        />
     );
   }
 
@@ -371,41 +320,16 @@ const AuthComponent = () => {
             </TabsList>
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="Email">Email</Label>
-                  <Input
-                    id="username"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-                {/* Exibe a mensagem de erro se houver */}
-                {loginError && (
-                  <p className="text-red-500 text-sm">{loginError}</p>
-                )}
-                {registerError && (
-                  <p className="text-red-500 text-sm">{registerError}</p>
-                )}
-                <Button
-                  type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  <Link to={"/avisos"}>Entrar</Link>
-                </Button>
+                <LoginSection
+                  loginError={loginError}
+                  registerError={registerError}
+                  email={email}
+                  setEmail={setEmail}
+                  password={password}
+                  setPassword={setPassword}
+                  setForgotPasswordModal={setForgotPasswordModal}
+
+                />
               <Button type="button" variant="link" onClick={() => setForgotPasswordModal(true)} className="mt-2 w-full self-center">
                 Esqueceu sua senha?
               </Button>
@@ -422,100 +346,20 @@ const AuthComponent = () => {
             </TabsContent>
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Senha</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="border-green-300 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-                <div>
-                <Label>Anexos/Documentos</Label>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="bg-green-100 text-green-700 hover:bg-green-200"
-                    >
-                      Adicionar Arquivo
-                    </Button>
-                    <Input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      onChange={handleFileChange}
-                      accept=".pdf"
-                      
-                    />
-                    
-                    <div>
-                      {arquivos.map((arquivo, index) => (
-                        <div key={index} className="flex items-center justify-between bg-white p-2 rounded-md shadow">
-                          {arquivo.tipo === "imagem" ? (
-                            <div className="relative aspect-video">
-                              <img
-                                src={arquivo.url}
-                                alt={arquivo.nome}
-                                className="rounded-md object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              <FileText className="text-green-600" size={24} />
-                              <span className="text-sm truncate">{arquivo.nome}</span>
-                            </div>
-                          )}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-700 hover:bg-white"
-                            onClick={() => removerArquivo(index)}
-                          >
-                            <X size={16}  />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <CheckboxText
+                <SignUpSection
+                  name={name}
+                  setName={setName}
+                  email={email}
+                  setEmail={setEmail}
+                  password={password}
+                  setPassword={setPassword}
+                  fileInputRef={fileInputRef}
+                  handleFileChange={handleFileChange}
+                  arquivos={arquivos}
+                  removerArquivo={removerArquivo}
                   handleCheckboxChange={handleCheckboxChange}
                   isChecked={isChecked}
                 />
-                <Button
-                  type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  Cadastrar
-                </Button>
               </form>
             </TabsContent>
           </Tabs>
