@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { CheckboxText } from "components/Checkbox/CheckboxText";
 import Loading from "components/Loading/Loading";
 import { Button } from "components/ui/button";
 import {
@@ -26,6 +27,7 @@ type Arquivo = {
 const AuthComponent = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
   const [showModal,setShowModal] = useState(false);
   const [forgotPasswordModal, setForgotPasswordModal] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
@@ -41,6 +43,9 @@ const AuthComponent = () => {
   const [arquivos, setArquivos] = useState<Arquivo[]>([])
   const navigate = useNavigate();
 
+  const handleCheckboxChange = (checked: boolean) => {
+    setIsChecked(checked);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -78,7 +83,7 @@ const AuthComponent = () => {
       // Verifica o status do usuário antes de permitir o login
       const { data: userStatusData, error: userStatusError } = await supabase
         .from("Aluno")
-        .select("Status")
+        .select("Status,termAccepted")
         .eq("email", email);
   
       if (userStatusError) {
@@ -95,6 +100,7 @@ const AuthComponent = () => {
       }
   
       const status = userStatusData[0].Status;
+      const termAccepted = userStatusData[0].termAccepted
       if (status === "PENDENTE") {
         setIsLoading(false);
         setLoginError("Seu cadastro ainda não foi aprovado. Aguarde a aprovação.");
@@ -102,6 +108,10 @@ const AuthComponent = () => {
       }else if (status === "LISTA DE ESPERA") {
         setIsLoading(false);
         setLoginError("Seu cadastro foi colocado na lista de espera. Entre em contato com a instituição para mais informações.");
+        return;
+      }else if (termAccepted == false){
+        setIsLoading(false);
+        setLoginError('Você não aceitou os termos e condições de uso. Fale com a organização do projeto para rever isto');
         return;
       }
   
@@ -132,6 +142,7 @@ const AuthComponent = () => {
   };
 
   const handleForgotPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    
     e.preventDefault();
     setResetMessage('');
     setIsLoading(true);
@@ -150,6 +161,11 @@ const AuthComponent = () => {
     e.preventDefault();
     setApprovalStatus("PENDENTE");
     setIsLoading(true);
+    if(arquivos.length < 1){
+      setIsLoading(false)
+      alert('Lembre-se de inserir o documento no anexo para efetuar o cadastro.');
+      return;
+    }
   
     // Verifica se o email já existe na tabela 'Aluno' antes de tentar cadastrar o usuário
     const { data: existingUserData, error: existingUserError } = await supabase
@@ -198,6 +214,7 @@ const AuthComponent = () => {
           email: email,
           Status: approvalStatus,
           documentos: publicURL, // Armazena a URL como string
+          termAccepted: isChecked, 
         },
       ])
       .select("id")
@@ -454,8 +471,10 @@ const AuthComponent = () => {
                       ref={fileInputRef}
                       className="hidden"
                       onChange={handleFileChange}
-                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                      accept=".pdf"
+                      
                     />
+                    
                     <div>
                       {arquivos.map((arquivo, index) => (
                         <div key={index} className="flex items-center justify-between bg-white p-2 rounded-md shadow">
@@ -487,6 +506,10 @@ const AuthComponent = () => {
                     </div>
                   </div>
                 </div>
+                <CheckboxText
+                  handleCheckboxChange={handleCheckboxChange}
+                  isChecked={isChecked}
+                />
                 <Button
                   type="submit"
                   className="w-full bg-green-600 hover:bg-green-700"
@@ -496,6 +519,7 @@ const AuthComponent = () => {
               </form>
             </TabsContent>
           </Tabs>
+          
         </CardContent>
       </Card>
 

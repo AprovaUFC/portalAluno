@@ -12,7 +12,7 @@ type Nota = {
   id: number;
   materia: string;
   nota: number;
-  dataLimite: string;
+  dataEntrega: string;
 };
 
 export default function PaginaNotas() {
@@ -83,7 +83,7 @@ export default function PaginaNotas() {
           id: nota.id,
           materia: nota.Atividade.titulo,
           nota: nota.nota,
-          dataLimite: formatarData(nota.dataEntrega),
+          dataEntrega: formatarData(nota.dataEntrega),
         }));
 
         setNotas(notasMapeadas || []);
@@ -182,7 +182,7 @@ export default function PaginaNotas() {
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell>{nota.dataLimite}</TableCell>
+                            <TableCell>{nota.dataEntrega}</TableCell>
                           </motion.tr>
                         ))}
                       </AnimatePresence>
