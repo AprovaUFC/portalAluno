@@ -2,7 +2,8 @@ import { CheckboxText } from "components/Checkbox/CheckboxText"
 import { Button } from "components/ui/button"
 import { Input } from "components/ui/input"
 import { Label } from "components/ui/label"
-import { FileText, X } from "lucide-react"
+import { Eye, EyeOff, FileText, X } from "lucide-react"
+import { useState } from "react"
 
 type Arquivo = {
     nome: string
@@ -28,6 +29,9 @@ interface SignUpSectionProps{
 
 
 const SignUpSection = (props: SignUpSectionProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+
   return (
     <>
     <div className="space-y-2">
@@ -54,14 +58,23 @@ const SignUpSection = (props: SignUpSectionProps) => {
     </div>
     <div className="space-y-2">
       <Label htmlFor="newPassword">Senha</Label>
+      <div className="relative">
       <Input
         id="newPassword"
-        type="password"
+        type={showPassword ? "text" : "password"}
         value={props.password}
         onChange={(e) => props.setPassword(e.target.value)}
         required
         className="border-green-300 focus:border-green-500 focus:ring-green-500"
       />
+      <button
+        type="button"
+        onClick={() => setShowPassword((prev) => !prev)}
+        className="absolute inset-y-0 right-2 flex items-center text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+        {showPassword ? <Eye/> : <EyeOff/>}
+      </button>
+      </div>
     </div>
     <div>
     <Label>Anexos/Documentos</Label>
