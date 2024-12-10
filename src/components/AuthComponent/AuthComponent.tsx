@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import ApprovalStatus from "components/ApprovalStatus/ApprovalStatus";
+import DialogForgotPassword from "components/DialogForgotPassword/DialogForgotPassword";
+import DialogSignUp from "components/DialogSignUp/DialogSignUp";
 import Loading from "components/Loading/Loading";
 import LoginSection from "components/LoginSection/LoginSection";
 import SignUpSection from "components/SignUpSection/SignUpSection";
@@ -11,9 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "components/ui/dialog";
-import { Input } from "components/ui/input";
-import { Label } from "components/ui/label";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { useRef, useState } from "react";
 import {  useNavigate } from "react-router-dom";
@@ -31,7 +31,6 @@ const AuthComponent = () => {
   const [isChecked, setIsChecked] = useState(false);
   const [showModal,setShowModal] = useState(false);
   const [forgotPasswordModal, setForgotPasswordModal] = useState(false);
-  const [resetMessage, setResetMessage] = useState('');
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -142,20 +141,6 @@ const AuthComponent = () => {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent<HTMLFormElement>) => {
-    
-    e.preventDefault();
-    setResetMessage('');
-    setIsLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) {
-      setResetMessage('Erro ao tentar recuperar senha. Verifique o email inserido.');
-    } else {
-      setResetMessage('Um email de recuperação foi enviado. Por favor, verifique sua caixa de entrada.');
-    }
-
-    setIsLoading(false)
-  };
 
   // Função de registro
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -367,44 +352,19 @@ const AuthComponent = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Cadastro Realizado!</DialogTitle>
-            <DialogDescription>
-              Verifique a caixa de mensagens do email inserido no cadastro para confirmar o email.
-            </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+      <DialogSignUp
+        showModal={showModal}
+        setShowModal={setShowModal}
+      />
 
-    <Dialog open={forgotPasswordModal} onOpenChange={setForgotPasswordModal}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Recuperar Senha</DialogTitle>
-          <DialogDescription>
-            Insira seu email para receber instruções de redefinição de senha.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleForgotPassword} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="reset-email">Email</Label>
-            <Input
-              id="reset-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="border-green-300 focus:border-green-500 focus:ring-green-500"
-            />
-          </div>
-          <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">Enviar Email de Recuperação</Button>
-        </form>
-        {resetMessage && (
-          <p className="mt-4 text-green-500 text-sm">{resetMessage}</p>
-        )} {isLoading && (<Loading/>)}
-      </DialogContent>
-    </Dialog>
+      <DialogForgotPassword
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        email={email}
+        setEmail={setEmail}
+        setForgotPasswordModal={setForgotPasswordModal}
+        forgotPasswordModal={forgotPasswordModal}
+      />
     {isLoading && (<Loading/>)}
     </div>
   );
