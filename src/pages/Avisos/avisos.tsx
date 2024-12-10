@@ -64,9 +64,6 @@ export default function Avisos() {
         <NavBarComponent />
       </div>
       <div className="flex-grow bg-green-50 overflow-auto">
-        {/* <header className="bg-green-50 p-4 text-green-600">
-          <h1 className="text-2xl font-bold text-center">Avisos e Materiais</h1>
-        </header> */}
         {isLoading && (<Loading/>)}
         <ScrollArea className="h-full">
           <div className="bg-green-50 pl-10 max-sm:pr-5 pt-8">

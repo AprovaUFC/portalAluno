@@ -64,7 +64,7 @@ export default function PerfilAluno() {
           return;
         }
 
-        console.log(user)
+        
         if (user && user.identities && user.identities.length > 0) {
           const userId = user.identities[0].identity_data?.aluno_id ?? "";          
           const { data, error } = await supabase
