@@ -16,7 +16,7 @@ export function CheckboxText(props: CheckboxProps) {
         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
         <a
-          href="https://zdfhrqkkdxrrwxgmkjia.supabase.co/storage/v1/object/public/termo/Documento%20de%20Requisitos%20-%20Aprova.pdf"
+          href="https://zdfhrqkkdxrrwxgmkjia.supabase.co/storage/v1/object/public/termo/Termo_de_uso.pdf"
           target="_blank"
           rel="noopener noreferrer"
         >
