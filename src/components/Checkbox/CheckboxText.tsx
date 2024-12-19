@@ -9,20 +9,21 @@ interface CheckboxProps {
 
 export function CheckboxText(props: CheckboxProps) {
   return (
-    <div className="flex items-center space-x-2">
-      <Checkbox id="terms" checked={props.isChecked} onCheckedChange={props.handleCheckboxChange} required/>
-      <label
-        htmlFor="terms"
-        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-      >
-        <a
-          href="https://zdfhrqkkdxrrwxgmkjia.supabase.co/storage/v1/object/public/termo/Documento%20de%20Requisitos%20-%20Aprova.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
+    <div className="items-top flex space-x-2">
+      <Checkbox id="terms1" required checked={props.isChecked} onCheckedChange={props.handleCheckboxChange}/>
+      <div className="grid gap-1.5 leading-none">
+        <label
+          htmlFor="terms1"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           Li e aceito os termos e condições
-        </a>
-      </label>
+        </label>
+        <p className="text-sm text-muted-foreground">
+          <a href="https://zdfhrqkkdxrrwxgmkjia.supabase.co/storage/v1/object/public/termo/Termo_de_uso.pdf" target="_blank">
+         Clique aqui para ler o termo
+         </a>
+        </p>
+      </div>
     </div>
   );
 }
