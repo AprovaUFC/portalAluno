@@ -14,14 +14,19 @@ import NavBarComponent from "components/NavBar/NavBarComponent"
 import { supabase } from "@/lib/supabase"
 import Loading from "components/Loading/Loading"
 
-type Aviso = {
+interface Professor{
+  nome: string,
+  perfil: string
+}
+interface Aviso  {
   id: number
-  professor_id: { nome: string, perfil: string }[] // Espera-se um único professor
+  professor_id: number
   descricao: string
   arquivos: string // Deve ser uma URL de arquivo
-  imagem: string // Deve ser uma URL de imagem
+  imagem?: string // Deve ser uma URL de imagem
   created_at: string // Deixe como string pois vem do banco de dados no formato ISO
 }
+
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -32,28 +37,68 @@ const fadeInUp = {
 export default function Avisos() {
   const [avisos, setAvisos] = useState<Aviso[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [professor,setProfessor] = useState<Professor>()
 
   useEffect(() => {
     const fetchAvisos = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('Avisos')
-          .select(`id, professor_id (nome,perfil), descricao, imagem, arquivos, created_at`)
-          .order('created_at', { ascending: false }) // Ordena pela data de criação em ordem decrescente
+      setIsLoading(true);
   
-        if (error) {
-          console.error('Erro', error)
-        } else {
-          setAvisos(data)
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setIsLoading(false)
+      // Busca os avisos
+      const { data: avisos, error: avisosError } = await supabase
+        .from('Avisos')
+        .select(`id, professor_id, descricao, imagem, arquivos, created_at`)
+        .order('created_at', { ascending: false });
+  
+      if (avisosError) {
+        console.error('Erro ao buscar avisos:', avisosError);
+        setIsLoading(false);
+        return;
       }
-    }
-    fetchAvisos()
-  }, [])
+
+      if (!avisos || avisos.length === 0) {
+        console.warn('Nenhum aviso encontrado.');
+        setIsLoading(false);
+        return;
+      }
+
+  
+      // Obtém o ID do professor do primeiro aviso
+      const professorId = avisos[0]?.professor_id;
+  
+      if (!professorId) {
+        console.warn('ID do professor não encontrado no primeiro aviso.');
+        setIsLoading(false);
+        return;
+      }
+  
+      // Busca os dados do professor
+      const { data: professorData, error: professorError } = await supabase
+        .from('Professor')
+        .select('nome, perfil')
+        .eq('id', professorId)
+        .single();
+  
+      if (professorError) {
+        console.error('Erro ao buscar dados do professor:', professorError);
+        setIsLoading(false);
+        return;
+      }
+  
+      if (!professorData) {
+        console.warn('Dados do professor não encontrados.');
+        setIsLoading(false);
+        return;
+      }
+  
+  
+      // Atualiza os estados
+      setAvisos(avisos);
+      setProfessor(professorData);
+      setIsLoading(false);
+    };
+  
+    fetchAvisos();
+  }, []);
   
   
 
@@ -68,7 +113,7 @@ export default function Avisos() {
         <ScrollArea className="h-full">
           <div className="bg-green-50 pl-10 max-sm:pr-5 pt-8">
             <AnimatePresence>
-              {avisos.map((aviso: any) => (
+              {avisos.map((aviso: Aviso) => (
                 <motion.div
                   key={aviso.id}
                   variants={fadeInUp}
@@ -83,16 +128,16 @@ export default function Avisos() {
                     <CardHeader className="bg-gradient-to-r from-green-600 to-green-500">
                       <div className="flex items-center space-x-4">
                         <Avatar>
-                          {aviso.professor_id && aviso.professor_id.perfil ? (
-                            <AvatarImage src={aviso.professor_id.perfil}></AvatarImage>
+                          {professor && professor.perfil ? (
+                            <AvatarImage src={professor.perfil}></AvatarImage>
                           ) : (
                             <AvatarFallback>
-                              {aviso.professor_id ? aviso.professor_id.nome.charAt(0) : 'P'}
+                              {professor ? professor.nome.charAt(0) : 'P'}
                             </AvatarFallback>
                           )}
                         </Avatar>
                         <div>
-                          <CardTitle className="text-white">{aviso.professor_id ? `Professor ${aviso.professor_id.nome}` : "Professor Desconhecido"}</CardTitle>
+                          <CardTitle className="text-white">{aviso.professor_id ? `Professor ${professor?.nome}` : "Professor Desconhecido"}</CardTitle>
                           <CardDescription className="text-green-100">
                             {/* Formatando a data com date-fns */}
                             <span>{format(new Date(aviso.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>

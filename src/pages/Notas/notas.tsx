@@ -8,9 +8,16 @@ import { Search } from "lucide-react";
 import Loading from "components/Loading/Loading";
 import NavBarComponent from "components/NavBar/NavBarComponent";
 
-type Nota = {
+
+interface Atividade {
   id: number;
-  materia: string;
+  titulo: string | null;
+}
+
+type Nota = {
+  atividade_id: number;
+  id: number;
+  
   nota: number;
   dataEntrega: string;
 };
@@ -21,6 +28,7 @@ export default function PaginaNotas() {
   const [busca, setBusca] = useState("");
   const [alunoId, setAlunoId] = useState<number | null>(null); // Aluno logado
   const [isLoading, setIsLoading] = useState(true);
+  const [atividades, setAtividades] = useState<Atividade[]>([]);
 
   // Função para buscar o aluno logado
   const fetchAlunoLogado = async () => {
@@ -71,21 +79,42 @@ export default function PaginaNotas() {
           nota, 
           dataEntrega, 
           aluno_id,
-          Atividade: atividade_id (titulo)
+          atividade_id 
         `)
         .eq("aluno_id", alunoId); // Buscando a atividade e o título relacionado
+        
+        const atividadeIds = data?.map((atividade) => atividade.atividade_id).filter(Boolean); // Remove valores falsy
+        if (atividadeIds?.length) {
+          const atividadesComTitulos = await Promise.all(
+            atividadeIds.map(async (id) => {
+              const { data: atividadeTitulo, error: atividadeTituloError } = await supabase
+                .from("Atividade")
+                .select("titulo")
+                .eq("id", id)
+                .single(); // Usa `.single()` para obter apenas um registro correspondente
+              
+              if (atividadeTituloError) {
+                console.error(`Erro ao buscar título para atividade ${id}:`, atividadeTituloError);
+                return { id, titulo: null };
+              }
+              return { id, titulo: atividadeTitulo.titulo };
+            })
+          );
+          setAtividades(atividadesComTitulos)
+        } else {
+          console.error("Nenhuma atividade encontrada.");
+        }
 
       if (error) {
         console.error("Erro ao buscar as notas: ", error);
       } else {
         // Mapeia os dados da API para o formato que será usado no componente
-        const notasMapeadas: Nota[] = data.map((nota: any) => ({
+        const notasMapeadas: Nota[] = data.map((nota) => ({
           id: nota.id,
-          materia: nota.Atividade.titulo,
+          atividade_id: nota.atividade_id,
           nota: nota.nota,
           dataEntrega: formatarData(nota.dataEntrega),
         }));
-
         setNotas(notasMapeadas || []);
         setNotasFiltered(notasMapeadas || []); // Inicializando o filtro com todas as notas
       }
@@ -100,11 +129,18 @@ export default function PaginaNotas() {
 
   // Atualiza a lista filtrada com base no campo de busca
   useEffect(() => {
-    const notasFiltradas = notas.filter((nota) =>
-      nota.materia.toLowerCase().includes(busca.toLowerCase())
-    );
+    const notasFiltradas = notas.filter((nota) => {
+      // Encontrar a atividade correspondente à nota
+      const atividade = atividades.find((atv) => atv.id === nota.atividade_id);
+  
+      // Verificar se o título da atividade contém a string de busca
+      return atividade?.titulo?.toLowerCase().includes(busca.toLowerCase());
+    });
+  
     setNotasFiltered(notasFiltradas);
-  }, [busca, notas]);
+  }, [busca, notas, atividades]);
+  
+  
 
   // Função para formatar a data para um formato mais amigável (dd/MM/yyyy)
   const formatarData = (data: string) => {
@@ -164,27 +200,32 @@ export default function PaginaNotas() {
                     </TableHeader>
                     <TableBody>
                       <AnimatePresence>
-                        {notasFiltered.map((nota) => (
-                          <motion.tr
-                            key={nota.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <TableCell className="font-medium">{nota.materia}</TableCell>
-                            <TableCell>
-                              {nota.nota === null || nota.nota === undefined ? (
-                                <span className="font-semibold text-gray-500">Nota ainda não aplicada</span>
-                              ) : (
-                                <span className={`font-semibold ${nota.nota >= 7 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {nota.nota.toFixed(1)}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell>{nota.dataEntrega}</TableCell>
-                          </motion.tr>
-                        ))}
+                      {notasFiltered.map((nota) => {
+                          // Encontrar o título da atividade correspondente
+                          const atividade = atividades.find((atv) => atv.id === nota.atividade_id); // Ajuste conforme o campo que relaciona
+                          const tituloAtividade = atividade?.titulo || "Título não disponível";
+                          return (
+                            <motion.tr
+                              key={nota.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <TableCell className="font-medium">{tituloAtividade}</TableCell>
+                              <TableCell>
+                                {nota.nota === null || nota.nota === undefined ? (
+                                  <span className="font-semibold text-gray-500">Nota ainda não aplicada</span>
+                                ) : (
+                                  <span className={`font-semibold ${nota.nota >= 7 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {nota.nota.toFixed(1)}
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell>{nota.dataEntrega}</TableCell>
+                            </motion.tr>
+                          );
+                        })}
                       </AnimatePresence>
                     </TableBody>
                   </Table>

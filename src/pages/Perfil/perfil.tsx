@@ -140,7 +140,7 @@ export default function PerfilAluno() {
       return () => clearInterval(intervalId);
     }
     fetchData();
-  }, [showConfirmEmailModal]);
+  }, [novaInfo.email,showConfirmEmailModal]);
   
 
   const handleEdit = () => {
