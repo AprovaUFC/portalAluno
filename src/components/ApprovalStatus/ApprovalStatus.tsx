@@ -56,6 +56,19 @@ const ApprovalStatus = (props: ApprovalStatusProps) => {
               </p>
             </>
           )}
+          {props.approvalStatus === "REPROVADO" && (
+            <>
+              <div className="text-red-500 flex items-center justify-center">
+                <XCircle className="h-12 w-12" />
+              </div>
+              <p className="text-lg font-semibold">
+                Desculpe, seu cadastro não foi aprovado
+              </p>
+              <p>
+                Entre em contato com a instituição para mais informações
+              </p>
+            </>
+          )}
           <Button
             onClick={() => props.setShowApprovalStatus(false)}
             className="w-full bg-green-600 hover:bg-green-700"

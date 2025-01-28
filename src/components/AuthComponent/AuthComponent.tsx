@@ -105,7 +105,11 @@ const AuthComponent = () => {
         setIsLoading(false);
         setLoginError("Seu cadastro ainda não foi aprovado. Aguarde a aprovação.");
         return;
-      }else if (status === "LISTA DE ESPERA") {
+      }else if(status === "REPROVADO"){
+        setIsLoading(false);
+        setLoginError("Seu cadastro foi reprovado.");
+      }
+      else if (status === "LISTA DE ESPERA") {
         setIsLoading(false);
         setLoginError("Seu cadastro foi colocado na lista de espera. Entre em contato com a instituição para mais informações.");
         return;
