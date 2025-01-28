@@ -3,6 +3,7 @@ import { Button } from "components/ui/button";
 import {
   Bell,
   BookOpen,
+  Clock,
   GraduationCap,
   LogOut,
   Menu,
@@ -78,6 +79,17 @@ const NavBarComponent = () => {
                 <GraduationCap className="mr-2 h-4 w-4" />
                 Notas
               </Button>
+            </Link>
+          </li>
+          <li>
+            <Link to={'/horarios'}>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-green-700 hover:bg-green-100 hover:text-green-800"
+                >
+                  <Clock className="mr-2 h-4 w-4"/>
+                  Horários
+                </Button>
             </Link>
           </li>
 

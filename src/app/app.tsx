@@ -8,6 +8,7 @@ import PerfilAluno from "@/pages/Perfil/perfil";
 import PaginaNotas from "@/pages/Notas/notas";
 import Avisos from "@/pages/Avisos/avisos";
 import ResetSenha from "@/pages/ResetSenha/ResetSenha";
+import PageHorarios from "@/pages/Horarios/horarios";
 
 const App: React.FC = () => {
   return (
@@ -46,6 +47,11 @@ const App: React.FC = () => {
             </PrivateRoute>
           }
         ></Route>
+        <Route path="horarios" element={
+          <PrivateRoute>
+            <PageHorarios/>
+          </PrivateRoute>
+        }></Route>
         <Route 
         path="/reset-password" element={<ResetSenha/>}></Route>
       </Routes>
