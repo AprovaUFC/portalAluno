@@ -108,6 +108,7 @@ const AuthComponent = () => {
       }else if(status === "REPROVADO"){
         setIsLoading(false);
         setLoginError("Seu cadastro foi reprovado.");
+        return;
       }
       else if (status === "LISTA DE ESPERA") {
         setIsLoading(false);

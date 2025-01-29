@@ -66,11 +66,12 @@ useEffect(()=>{
               return (
                 <div key={`${dia}-${horario}`} className="relative">
                   {aulaAtual ? (
-                    <div className="bg-green-100 p-2 rounded text-sm">
-                      <p className="font-bold">{aulaAtual.disciplina}</p>
-                      <p>Professor {aulaAtual.Professor}</p>
-                      <p>Sala {aulaAtual.sala} Unidade {aulaAtual.unidade}</p>
-                    </div>
+                     <div className="bg-green-100 p-2 rounded text-sm mt-1">
+                     <p className="font-bold">{aulaAtual.disciplina}</p>
+                     <hr />
+                     <p>Professor(a) : {aulaAtual.Professor}</p>
+                     <p>Sala {aulaAtual.sala} | Unidade {aulaAtual.unidade}</p>
+                   </div>
                   ) : (
                     <div className="p-2 rounded text-sm text-gray-400">-</div>
                   )}
@@ -97,8 +98,9 @@ useEffect(()=>{
                   {aulaAtual ? (
                     <div className="bg-green-100 p-2 rounded text-sm mt-1">
                       <p className="font-bold">{aulaAtual.disciplina}</p>
-                      <p>Professor {aulaAtual.Professor}</p>
-                      <p>Sala {aulaAtual.sala}</p>
+                      <hr />
+                      <p>Professor(a) : {aulaAtual.Professor}</p>
+                      <p>Sala {aulaAtual.sala} | Unidade {aulaAtual.unidade}</p>
                     </div>
                   ) : (
                     <div className="p-2 rounded text-sm text-gray-400">Sem aula</div>
