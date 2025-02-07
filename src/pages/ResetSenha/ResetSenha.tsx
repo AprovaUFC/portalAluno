@@ -27,7 +27,8 @@ export default function ResetSenha() {
   const [searchParams] = useSearchParams() // O primeiro valor é o URLSearchParams
   const token = searchParams.get('token') // Usar o método get no searchParams para pegar o token da URL
   const email = searchParams.get('email') // Capturando o e-mail da URL para o processo de verificação
-
+  console.log(token)
+   console.log(email)
   const validarSenha = (senha: string) => {
     return senha.length >= 6
   }
@@ -47,31 +48,37 @@ export default function ResetSenha() {
       return
     }
 
-    // Verifica se o token e o e-mail estão presentes
+    // Verifica se o token e o e-mail estão presentes 
     if (!token || !email) {
       setErro("Token de redefinição ou e-mail não encontrado.")
       return
     }
 
     // Verificando o token de recuperação
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      type: 'recovery', // Tipo de OTP para redefinição de senha
-      token: token, // Token obtido da URL
-      email: email // E-mail do usuário
-    })
-
-
-    if (verifyError) {
-      setErro("Houve um erro ao validar o token. Por favor, tente novamente.")
-      console.error(verifyError)
+    if (!token) {
+      setErro("Token de redefinição não encontrado.")
       return
     }
 
+      // 1️⃣ Verifica o token de redefinição de senha
+    const { error: verifyError }= await supabase.auth.verifyOtp({   
+      type: "recovery",
+      token: token,
+      email: email
+    });
+
+  if (verifyError) {
+    setErro("Token inválido ou expirado. Tente novamente.");
+    console.error(verifyError);
+    return;
+  }
+
+    
     // Atualizando a senha do usuário no Supabase
     const { error: updateError } = await supabase.auth.updateUser({
       password: novaSenha
     })
-
+    
     if (updateError) {
       setErro("Houve um erro ao redefinir sua senha. Por favor, tente novamente.")
       console.error(updateError)
