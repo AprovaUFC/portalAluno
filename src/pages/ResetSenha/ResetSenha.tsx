@@ -27,8 +27,7 @@ export default function ResetSenha() {
   const [searchParams] = useSearchParams() // O primeiro valor é o URLSearchParams
   const token = searchParams.get('token') // Usar o método get no searchParams para pegar o token da URL
   const email = searchParams.get('email') // Capturando o e-mail da URL para o processo de verificação
-  console.log(token)
-   console.log(email)
+
   const validarSenha = (senha: string) => {
     return senha.length >= 6
   }
